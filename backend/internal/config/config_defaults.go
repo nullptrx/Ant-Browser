@@ -51,6 +51,10 @@ func normalizeConfig(config *Config) {
 	if strings.TrimSpace(config.App.Name) == "" {
 		config.App.Name = defaultConfig.App.Name
 	}
+	if isLegacyDefaultWindowSize(goruntime.GOOS, config.App.Window) {
+		config.App.Window.Width = defaultConfig.App.Window.Width
+		config.App.Window.Height = defaultConfig.App.Window.Height
+	}
 	if config.App.Window.Width <= 0 {
 		config.App.Window.Width = defaultConfig.App.Window.Width
 	}
@@ -269,13 +273,8 @@ func DefaultConfig() *Config {
 			},
 		},
 		App: AppConfig{
-			Name: "Ant Browser",
-			Window: WindowConfig{
-				Width:     1750,
-				Height:    1000,
-				MinWidth:  1200,
-				MinHeight: 700,
-			},
+			Name:   "Ant Browser",
+			Window: defaultWindowConfigForOS(goruntime.GOOS),
 		},
 		Runtime: RuntimeConfig{
 			MaxMemoryMB: 0,
@@ -356,6 +355,19 @@ func DefaultConfig() *Config {
 			},
 		},
 	}
+}
+
+// defaultWindowConfigForOS 返回主窗口默认尺寸；macOS 笔记本屏幕较小（常见 1470~1728 点宽），默认窗口相应缩小。
+func defaultWindowConfigForOS(goos string) WindowConfig {
+	if strings.EqualFold(strings.TrimSpace(goos), "darwin") {
+		return WindowConfig{Width: 1440, Height: 900, MinWidth: 1200, MinHeight: 700}
+	}
+	return WindowConfig{Width: 1750, Height: 1000, MinWidth: 1200, MinHeight: 700}
+}
+
+// isLegacyDefaultWindowSize 识别 macOS 上沿用旧默认值 1750x1000 的配置，迁移到新默认尺寸；用户自定义的尺寸不受影响。
+func isLegacyDefaultWindowSize(goos string, window WindowConfig) bool {
+	return strings.EqualFold(strings.TrimSpace(goos), "darwin") && window.Width == 1750 && window.Height == 1000
 }
 
 func defaultFingerprintArgsForOS(goos string) []string {
