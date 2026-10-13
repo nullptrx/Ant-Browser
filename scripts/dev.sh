@@ -27,7 +27,12 @@ require_cmd() {
 
 is_tcp_port_busy() {
   local port="$1"
-  ss -ltn "( sport = :$port )" | tail -n +2 | grep -q .
+  if command -v ss >/dev/null 2>&1; then
+    ss -ltn "( sport = :$port )" | tail -n +2 | grep -q .
+  else
+    # macOS 没有 ss，使用系统自带的 lsof
+    lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1
+  fi
 }
 
 resolve_wails_devserver() {
@@ -35,7 +40,7 @@ resolve_wails_devserver() {
   local host="${WAILS_DEVSERVER_HOST:-127.0.0.1}"
   local port="$start_port"
 
-  require_cmd ss
+  command -v ss >/dev/null 2>&1 || require_cmd lsof
 
   while is_tcp_port_busy "$port"; do
     port=$((port + 1))
