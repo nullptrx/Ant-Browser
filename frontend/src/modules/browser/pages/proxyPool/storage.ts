@@ -6,11 +6,29 @@ import { normalizeRefreshIntervalM, resolveImportedProxyName } from './helpers'
 const PROXY_LATENCY_CACHE_KEY = 'browser:proxyPool:latencyMap:v2'
 const PROXY_LATENCY_ENGINE_CACHE_KEY = 'browser:proxyPool:latencyEngineMap:v2'
 const PROXY_IP_HEALTH_CACHE_KEY = 'browser:proxyPool:ipHealthMap:v1'
+const PROXY_CHECK_CACHE_CONNECTOR_KEY = 'browser:proxyPool:checkCacheConnector:v1'
 const PROXY_SOURCE_IGNORED_NAMES_KEY = 'browser:proxyPool:sourceIgnoredProxyNames:v1'
 const PROXY_GLOBAL_AUTO_REFRESH_KEY = 'browser:proxyPool:globalAutoRefreshEnabled:v1'
 const PROXY_GLOBAL_REFRESH_INTERVAL_KEY = 'browser:proxyPool:globalRefreshIntervalM:v1'
 const PROXY_LATENCY_CACHE_TTL_MS = 12 * 60 * 60 * 1000
 const PROXY_IP_HEALTH_CACHE_TTL_MS = 12 * 60 * 60 * 1000
+
+// 测速、测速类型和 IP 健康都按当时的连接栈执行；连接栈变化（或首次记录）时清掉旧结果，返回是否清理过。
+export function syncProxyCheckCacheConnector(connectorType: string): boolean {
+  const current = (connectorType || '').trim()
+  if (!current) return false
+  try {
+    const previous = localStorage.getItem(PROXY_CHECK_CACHE_CONNECTOR_KEY)
+    localStorage.setItem(PROXY_CHECK_CACHE_CONNECTOR_KEY, current)
+    if (previous === current) return false
+    localStorage.removeItem(PROXY_LATENCY_CACHE_KEY)
+    localStorage.removeItem(PROXY_LATENCY_ENGINE_CACHE_KEY)
+    localStorage.removeItem(PROXY_IP_HEALTH_CACHE_KEY)
+    return true
+  } catch {
+    return false
+  }
+}
 
 export function readSourceIgnoredProxyNames(): Record<string, string[]> {
   try {

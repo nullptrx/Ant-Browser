@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from 'react'
-import { Button, FormItem, Input, Modal, Switch, Textarea } from '../../../../shared/components'
+import { Button, FormItem, Input, Modal, Select, Switch, Textarea } from '../../../../shared/components'
 import type { CoreSettingsForm } from '../coreManagement.types'
+import { CONNECTOR_STACK_OPTIONS } from './connectorStack'
 
 interface CoreSettingsModalProps {
   open: boolean
@@ -31,6 +32,14 @@ export function CoreSettingsModal({ open, form, saving, setForm, onClose, onSave
             value={form.userDataRoot}
             onChange={e => setForm(prev => ({ ...prev, userDataRoot: e.target.value }))}
             placeholder="例如：data"
+          />
+        </FormItem>
+        <FormItem label="代理连接栈" hint="Xray 与 Mihomo 两套栈不会自动混用。切换后新启动的实例生效，运行中的实例需重启，代理需重新测速。">
+          <Select
+            className="w-full"
+            value={form.defaultConnectorType}
+            onChange={e => setForm(prev => ({ ...prev, defaultConnectorType: e.target.value }))}
+            options={CONNECTOR_STACK_OPTIONS}
           />
         </FormItem>
         <FormItem label="默认指纹参数">

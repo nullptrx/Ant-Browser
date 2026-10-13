@@ -12,6 +12,7 @@ import { CoreSettingsModal } from './coreManagement/CoreSettingsModal'
 import { fetchCoreDownloadCatalog } from './coreManagement/coreDownloadRecommendation'
 import type { CoreDownloadCatalog } from './coreManagement/coreDownloadRecommendation'
 import type { CoreDisplayInfo, CoreDownloadForm, CoreDownloadProgress, CoreEditForm, CoreSettingsForm } from './coreManagement.types'
+import { syncProxyCheckCacheConnector } from './proxyPool/storage'
 
 export function CoreManagementPage() {
   const [cores, setCores] = useState<BrowserCore[]>([])
@@ -42,6 +43,7 @@ export function CoreManagementPage() {
     restoreLastSession: false,
     startReadyTimeoutMs: 3000,
     startStableWindowMs: 1200,
+    defaultConnectorType: 'mihomo',
   })
   const [savingSettings, setSavingSettings] = useState(false)
 
@@ -445,6 +447,7 @@ export function CoreManagementPage() {
       restoreLastSession: settings.restoreLastSession,
       startReadyTimeoutMs: settings.startReadyTimeoutMs,
       startStableWindowMs: settings.startStableWindowMs,
+      defaultConnectorType: settings.defaultConnectorType || 'mihomo',
     })
     setSettingsModalOpen(true)
   }
@@ -462,9 +465,10 @@ export function CoreManagementPage() {
         restoreLastSession: settingsForm.restoreLastSession,
         startReadyTimeoutMs: Math.max(1000, Number(settingsForm.startReadyTimeoutMs) || 3000),
         startStableWindowMs: Math.max(0, Number(settingsForm.startStableWindowMs) || 1200),
-        defaultConnectorType: settings.defaultConnectorType || 'mihomo',
+        defaultConnectorType: settingsForm.defaultConnectorType || 'mihomo',
       }
       await saveBrowserSettings(newSettings)
+      syncProxyCheckCacheConnector(newSettings.defaultConnectorType)
       setSettings(newSettings)
       setSettingsModalOpen(false)
       toast.success('设置已保存')

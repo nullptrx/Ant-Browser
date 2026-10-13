@@ -8,11 +8,12 @@ import {
   browserProxyCheckIPHealth,
   browserProxyTestSpeed,
   browserProxyWarmupBridge,
+  fetchBrowserSettings,
 } from '../../api'
 import type { ProxyIPHealthResult, ProxySpeedTestResult } from '../../types'
 import type { ProxyDisplayInfo } from './helpers'
 import { toLatencyValue } from './storage'
-import { readIPHealthCache, readLatencyCache, readLatencyEngineCache, writeIPHealthCache, writeLatencyCache, writeLatencyEngineCache } from './storage'
+import { readIPHealthCache, readLatencyCache, readLatencyEngineCache, syncProxyCheckCacheConnector, writeIPHealthCache, writeLatencyCache, writeLatencyEngineCache } from './storage'
 
 interface UseProxyChecksOptions {
   proxies: Array<{ proxyId: string }>
@@ -35,6 +36,20 @@ export function useProxyChecks({ proxies }: UseProxyChecksOptions) {
     setLatencyMap(readLatencyCache())
     setLatencyEngineMap(readLatencyEngineCache())
     setIPHealthMap(readIPHealthCache())
+    // 缓存需同步读取（下方写回 effect 会立即持久化当前状态），连接栈变化后再清空状态，由写回 effect 同步到存储。
+    let cancelled = false
+    fetchBrowserSettings()
+      .then(settings => {
+        if (!cancelled && syncProxyCheckCacheConnector(settings.defaultConnectorType)) {
+          setLatencyMap({})
+          setLatencyEngineMap({})
+          setIPHealthMap({})
+        }
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 import { Edit2, Settings } from 'lucide-react'
 import { Button, Card } from '../../../../shared/components'
 import type { BrowserSettings } from '../../types'
+import { connectorStackLabel } from './connectorStack'
 
 interface CoreSettingsCardProps {
   settings: BrowserSettings
@@ -26,12 +27,13 @@ export function CoreSettingsCard({ settings, onEdit }: CoreSettingsCardProps) {
       </div>
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-12">
-          <SettingsValue className="col-span-2 lg:col-span-3" label="用户数据根目录" value={settings.userDataRoot || '-'} />
+          <SettingsValue className="col-span-2 lg:col-span-2" label="用户数据根目录" value={settings.userDataRoot || '-'} />
+          <SettingsValue className="col-span-2 lg:col-span-2" label="代理连接栈" value={connectorStackLabel(settings.defaultConnectorType)} />
           <SettingsValue className="lg:col-span-1" label="恢复历史标签" value={settings.restoreLastSession ? '开启' : '关闭'} />
           <SettingsValue className="lg:col-span-1" label="轻启动模式" value={settings.lightStartEnabled ? '开启' : '关闭'} />
           <SettingsValue className="lg:col-span-2" label="启动就绪超时" value={`${settings.startReadyTimeoutMs} ms`} />
           <SettingsValue className="lg:col-span-2" label="启动稳定窗口" value={`${settings.startStableWindowMs} ms`} />
-          <SettingsList className="col-span-2 lg:col-span-3" label="默认启动页面" values={settings.defaultStartUrls} compact />
+          <SettingsList className="col-span-2 lg:col-span-2" label="默认启动页面" values={settings.defaultStartUrls} compact />
         </div>
         <div className="grid grid-cols-1 gap-3">
           <SettingsList label="默认指纹参数" values={settings.defaultFingerprintArgs} />
