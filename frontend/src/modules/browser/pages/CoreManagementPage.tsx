@@ -9,8 +9,8 @@ import { CoreDownloadModal } from './coreManagement/CoreDownloadModal'
 import { CoreEditModal } from './coreManagement/CoreEditModal'
 import { CoreSettingsCard } from './coreManagement/CoreSettingsCard'
 import { CoreSettingsModal } from './coreManagement/CoreSettingsModal'
-import { fetchCoreDownloadRecommendation } from './coreManagement/coreDownloadRecommendation'
-import type { CoreDownloadRecommendation } from './coreManagement/coreDownloadRecommendation'
+import { fetchCoreDownloadCatalog } from './coreManagement/coreDownloadRecommendation'
+import type { CoreDownloadCatalog } from './coreManagement/coreDownloadRecommendation'
 import type { CoreDisplayInfo, CoreDownloadForm, CoreDownloadProgress, CoreEditForm, CoreSettingsForm } from './coreManagement.types'
 
 export function CoreManagementPage() {
@@ -61,7 +61,7 @@ export function CoreManagementPage() {
   const [downloadModalOpen, setDownloadModalOpen] = useState(false)
   const [downloadForm, setDownloadForm] = useState<CoreDownloadForm>({ name: '', url: '', proxyMode: 'system', proxyId: '', mode: 'download' })
   const [downloadProgress, setDownloadProgress] = useState<CoreDownloadProgress | null>(null)
-  const [downloadRecommendation, setDownloadRecommendation] = useState<CoreDownloadRecommendation | null>(null)
+  const [downloadCatalog, setDownloadCatalog] = useState<CoreDownloadCatalog | null>(null)
   const [downloadRecommendationLoading, setDownloadRecommendationLoading] = useState(false)
   const [downloadRecommendationError, setDownloadRecommendationError] = useState('')
   const [importProgress, setImportProgress] = useState<CoreDownloadProgress | null>(null)
@@ -297,10 +297,11 @@ export function CoreManagementPage() {
       } catch {
         runtimeEnv = null
       }
-      const recommendation = await fetchCoreDownloadRecommendation(runtimeEnv)
-      setDownloadRecommendation(recommendation)
+      const catalog = await fetchCoreDownloadCatalog(runtimeEnv)
+      setDownloadCatalog(catalog)
+      const recommendation = catalog.recommendation
       if (!recommendation) {
-        setDownloadRecommendationError('当前环境没有可自动解压的 Release 压缩包')
+        setDownloadRecommendationError(`近期 Release 中没有 ${catalog.target.label} 可自动解压的压缩包`)
         return
       }
       setDownloadForm(prev => ({
@@ -308,8 +309,8 @@ export function CoreManagementPage() {
         url: prev.url.trim() ? prev.url : recommendation.downloadUrl,
       }))
     } catch (error: any) {
-      setDownloadRecommendation(null)
-      setDownloadRecommendationError(error?.message || '获取推荐地址失败')
+      setDownloadCatalog(null)
+      setDownloadRecommendationError(error?.message || '获取版本列表失败')
     } finally {
       setDownloadRecommendationLoading(false)
     }
@@ -318,7 +319,7 @@ export function CoreManagementPage() {
   const handleOpenDownload = () => {
     setDownloadForm({ name: '', url: '', proxyMode: 'system', proxyId: '', mode: 'download' })
     setDownloadProgress(null)
-    setDownloadRecommendation(null)
+    setDownloadCatalog(null)
     setDownloadRecommendationError('')
     setDownloadModalOpen(true)
     void loadCoreDownloadRecommendation()
@@ -327,7 +328,7 @@ export function CoreManagementPage() {
   const handleRedownload = (record: CoreDisplayInfo) => {
     setDownloadForm({ coreId: record.coreId, name: record.coreName, url: '', proxyMode: 'system', proxyId: '', mode: 'redownload' })
     setDownloadProgress(null)
-    setDownloadRecommendation(null)
+    setDownloadCatalog(null)
     setDownloadRecommendationError('')
     setDownloadModalOpen(true)
     void loadCoreDownloadRecommendation()
@@ -545,7 +546,7 @@ export function CoreManagementPage() {
         open={downloadModalOpen}
         form={downloadForm}
         progress={downloadProgress}
-        recommendation={downloadRecommendation}
+        catalog={downloadCatalog}
         recommendationLoading={downloadRecommendationLoading}
         recommendationError={downloadRecommendationError}
         proxies={proxies}

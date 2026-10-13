@@ -1,6 +1,6 @@
 export const FINGERPRINT_CHROMIUM_RELEASES_URL = 'https://github.com/adryfish/fingerprint-chromium/releases'
 
-const FINGERPRINT_CHROMIUM_LATEST_RELEASE_API_URL = 'https://api.github.com/repos/adryfish/fingerprint-chromium/releases/latest'
+const FINGERPRINT_CHROMIUM_RELEASE_LIST_API_URL = 'https://api.github.com/repos/adryfish/fingerprint-chromium/releases?per_page=30'
 
 type CoreDownloadPlatform = 'windows' | 'linux' | 'darwin' | ''
 type CoreDownloadArch = 'amd64' | 'arm64' | ''
@@ -23,6 +23,14 @@ export interface CoreDownloadRecommendation {
   downloadUrl: string
   releasesUrl: string
   namePlaceholder: string
+  prerelease: boolean
+  publishedAt: string
+}
+
+export interface CoreDownloadCatalog {
+  target: CoreDownloadTarget
+  releases: CoreDownloadRecommendation[]
+  recommendation: CoreDownloadRecommendation | null
 }
 
 interface GitHubReleaseAsset {
@@ -33,10 +41,13 @@ interface GitHubReleaseAsset {
 interface GitHubReleaseResponse {
   tag_name?: string
   html_url?: string
+  draft?: boolean
+  prerelease?: boolean
+  published_at?: string
   assets?: GitHubReleaseAsset[]
 }
 
-const archiveSuffixes = ['.zip', '.tar.xz', '.txz', '.tar.gz', '.tgz', '.tar.bz2', '.tbz2', '.tar']
+const archiveSuffixes = ['.zip', '.tar.xz', '.txz', '.tar.gz', '.tgz', '.tar.bz2', '.tbz2', '.tar', '.dmg']
 
 function normalizePlatform(value: string | undefined): CoreDownloadPlatform {
   const text = (value || '').trim().toLowerCase()
@@ -122,19 +133,8 @@ function pickReleaseAsset(assets: GitHubReleaseAsset[], target: CoreDownloadTarg
     .sort((left, right) => right.score - left.score || (left.asset.name || '').localeCompare(right.asset.name || ''))[0]?.asset || null
 }
 
-export async function fetchCoreDownloadRecommendation(
-  env: CoreDownloadRuntimeEnvironment | null | undefined,
-  signal?: AbortSignal,
-): Promise<CoreDownloadRecommendation | null> {
-  const target = resolveCoreDownloadTarget(env)
-  const response = await fetch(FINGERPRINT_CHROMIUM_LATEST_RELEASE_API_URL, {
-    headers: { Accept: 'application/vnd.github+json' },
-    signal,
-  })
-  if (!response.ok) {
-    throw new Error(`GitHub Releases 请求失败: ${response.status}`)
-  }
-  const release = await response.json() as GitHubReleaseResponse
+function toReleaseOption(release: GitHubReleaseResponse, target: CoreDownloadTarget): CoreDownloadRecommendation | null {
+  if (release.draft) return null
   const asset = pickReleaseAsset(release.assets || [], target)
   if (!asset?.name || !asset.browser_download_url) return null
 
@@ -146,6 +146,29 @@ export async function fetchCoreDownloadRecommendation(
     assetName: asset.name,
     downloadUrl: asset.browser_download_url,
     releasesUrl: release.html_url || FINGERPRINT_CHROMIUM_RELEASES_URL,
-    namePlaceholder: majorVersion ? `例如: chrome-${majorVersion}` : '例如: chrome-latest',
+    namePlaceholder: majorVersion ? `chrome-${majorVersion}` : 'chrome-latest',
+    prerelease: Boolean(release.prerelease),
+    publishedAt: (release.published_at || '').slice(0, 10),
   }
+}
+
+// fetchCoreDownloadCatalog 拉取最近的 Release 列表，每个版本只保留当前环境可自动解压的压缩包。
+export async function fetchCoreDownloadCatalog(
+  env: CoreDownloadRuntimeEnvironment | null | undefined,
+  signal?: AbortSignal,
+): Promise<CoreDownloadCatalog> {
+  const target = resolveCoreDownloadTarget(env)
+  const response = await fetch(FINGERPRINT_CHROMIUM_RELEASE_LIST_API_URL, {
+    headers: { Accept: 'application/vnd.github+json' },
+    signal,
+  })
+  if (!response.ok) {
+    throw new Error(`GitHub Releases 请求失败: ${response.status}`)
+  }
+  const list = await response.json() as GitHubReleaseResponse[]
+  const releases = (Array.isArray(list) ? list : [])
+    .map(release => toReleaseOption(release, target))
+    .filter((item): item is CoreDownloadRecommendation => item !== null)
+  const recommendation = releases.find(item => !item.prerelease) || releases[0] || null
+  return { target, releases, recommendation }
 }

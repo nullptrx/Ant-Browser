@@ -1,16 +1,18 @@
 import type { Dispatch, SetStateAction } from 'react'
-import { Button, FormItem, Input, Modal, toast } from '../../../../shared/components'
+import { Button, FormItem, Input, Modal, Select, toast } from '../../../../shared/components'
 import { BrowserOpenURL } from '../../../../wailsjs/runtime/runtime'
 import type { BrowserProxy } from '../../types'
 import type { CoreDownloadForm, CoreDownloadProgress } from '../coreManagement.types'
 import { FINGERPRINT_CHROMIUM_RELEASES_URL } from './coreDownloadRecommendation'
-import type { CoreDownloadRecommendation } from './coreDownloadRecommendation'
+import type { CoreDownloadCatalog } from './coreDownloadRecommendation'
+
+const CUSTOM_URL_OPTION = '__custom__'
 
 interface CoreDownloadModalProps {
   open: boolean
   form: CoreDownloadForm
   progress: CoreDownloadProgress | null
-  recommendation: CoreDownloadRecommendation | null
+  catalog: CoreDownloadCatalog | null
   recommendationLoading: boolean
   recommendationError: string
   proxies: BrowserProxy[]
@@ -25,7 +27,7 @@ export function CoreDownloadModal({
   open,
   form,
   progress,
-  recommendation,
+  catalog,
   recommendationLoading,
   recommendationError,
   proxies,
@@ -37,6 +39,25 @@ export function CoreDownloadModal({
 }: CoreDownloadModalProps) {
   const downloading = progress !== null && progress.phase !== 'error'
   const isRedownload = form.mode === 'redownload'
+  const releases = catalog?.releases || []
+  const recommendation = catalog?.recommendation || null
+  const selectedRelease = releases.find(item => item.downloadUrl === form.url.trim()) || null
+  const releaseOptions = [
+    ...releases.map(item => ({
+      value: item.downloadUrl,
+      label: [
+        item.releaseTag || item.assetName,
+        item === recommendation ? '（推荐）' : '',
+        item.prerelease ? '（预发布）' : '',
+        item.publishedAt ? ` · ${item.publishedAt}` : '',
+      ].join(''),
+    })),
+    { value: CUSTOM_URL_OPTION, label: '自定义下载地址' },
+  ]
+
+  const handleReleaseChange = (value: string) => {
+    setForm(prev => ({ ...prev, url: value === CUSTOM_URL_OPTION ? '' : value }))
+  }
 
   const handleClose = () => {
     if (progress && progress.phase !== 'done' && progress.phase !== 'error') {
@@ -65,7 +86,7 @@ export function CoreDownloadModal({
           <Input
             value={form.name}
             onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
-            placeholder={recommendation?.namePlaceholder || '例如: chrome-latest'}
+            placeholder={`例如: ${(selectedRelease || recommendation)?.namePlaceholder || 'chrome-latest'}`}
             disabled={progress !== null || isRedownload}
           />
           {!isRedownload && (
@@ -79,6 +100,42 @@ export function CoreDownloadModal({
           </div>
         )}
 
+        <FormItem label="内核版本">
+          <Select
+            className="w-full"
+            value={selectedRelease ? selectedRelease.downloadUrl : CUSTOM_URL_OPTION}
+            onChange={e => handleReleaseChange(e.target.value)}
+            options={releaseOptions}
+            disabled={progress !== null || recommendationLoading}
+          />
+          <div className="text-xs text-[var(--color-text-muted)] mt-2 flex items-center justify-between gap-3 bg-[var(--color-bg-muted)] p-2 rounded">
+            <span className="min-w-0 truncate" title={selectedRelease?.assetName}>
+              {recommendationLoading
+                ? '正在获取 Release 列表...'
+                : selectedRelease
+                  ? `${selectedRelease.target.label}：${selectedRelease.assetName}`
+                  : recommendationError || (catalog ? `已获取 ${releases.length} 个 ${catalog.target.label} 可用版本，也可直接填写地址` : '未获取到版本列表')}
+            </span>
+            {!recommendationLoading && (
+              <button
+                type="button"
+                onClick={onRefreshRecommendation}
+                className="shrink-0 text-[var(--color-accent)] hover:underline cursor-pointer font-medium"
+                disabled={progress !== null}
+              >
+                刷新列表
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => BrowserOpenURL(selectedRelease?.releasesUrl || FINGERPRINT_CHROMIUM_RELEASES_URL)}
+              className="shrink-0 text-[var(--color-accent)] hover:underline cursor-pointer font-medium"
+            >
+              打开 Releases
+            </button>
+          </div>
+        </FormItem>
+
         <FormItem label="下载地址" required>
           <Input
             value={form.url}
@@ -86,41 +143,6 @@ export function CoreDownloadModal({
             placeholder={recommendationLoading ? '正在匹配当前环境...' : 'https://github.com/.../chromium.zip'}
             disabled={progress !== null}
           />
-          <div className="text-xs text-[var(--color-text-muted)] mt-2 flex items-center justify-between gap-3 bg-[var(--color-bg-muted)] p-2 rounded">
-            <span className="min-w-0 truncate">
-              {recommendation
-                ? `已按 ${recommendation.target.label} 推荐：${recommendation.assetName}`
-                : recommendationLoading
-                  ? '正在按当前环境获取推荐地址...'
-                  : recommendationError || '未获取到当前环境推荐地址'}
-            </span>
-            {recommendation && (
-              <button
-                type="button"
-                onClick={() => setForm(prev => ({ ...prev, url: recommendation.downloadUrl }))}
-                className="shrink-0 text-[var(--color-accent)] hover:underline cursor-pointer font-medium"
-                disabled={progress !== null}
-              >
-                使用推荐
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => BrowserOpenURL(recommendation?.releasesUrl || FINGERPRINT_CHROMIUM_RELEASES_URL)}
-              className="shrink-0 text-[var(--color-accent)] hover:underline cursor-pointer font-medium"
-            >
-              打开 Releases
-            </button>
-            {!recommendationLoading && !recommendation && (
-              <button
-                type="button"
-                onClick={onRefreshRecommendation}
-                className="shrink-0 text-[var(--color-accent)] hover:underline cursor-pointer font-medium"
-              >
-                重试
-              </button>
-            )}
-          </div>
         </FormItem>
 
         <FormItem label="下载代理设置">
