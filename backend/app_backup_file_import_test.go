@@ -55,6 +55,10 @@ func TestBackupImportExternalCoresUsesManifestCoreIDs(t *testing.T) {
 	root := t.TempDir()
 	appRoot := filepath.Join(root, "app")
 	payloadRoot := filepath.Join(root, "payload")
+	// appRoot 不存在时 apppath 会判定为只读安装目录，并把相对路径解析到用户状态目录。
+	if err := os.MkdirAll(appRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
 	for _, folder := range []string{"external-01", "external-02"} {
 		if err := os.MkdirAll(filepath.Join(payloadRoot, "browser", "cores", "external", folder), 0o755); err != nil {
 			t.Fatal(err)
@@ -104,6 +108,10 @@ func TestBackupImportExternalCoresUsesMappedTargetCoreIDs(t *testing.T) {
 	root := t.TempDir()
 	appRoot := filepath.Join(root, "app")
 	payloadRoot := filepath.Join(root, "payload")
+	// appRoot 不存在时 apppath 会判定为只读安装目录，并把相对路径解析到用户状态目录。
+	if err := os.MkdirAll(appRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
 	for _, folder := range []string{"external-01", "external-02"} {
 		if err := os.MkdirAll(filepath.Join(payloadRoot, "browser", "cores", "external", folder), 0o755); err != nil {
 			t.Fatal(err)

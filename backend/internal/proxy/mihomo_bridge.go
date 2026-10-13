@@ -452,6 +452,17 @@ func (m *ClashManager) resolveMihomoBinary() (string, error) {
 	if configured := strings.TrimSpace(m.Config.Browser.ClashBinaryPath); configured != "" {
 		candidates = append(candidates, resolveEnvPath(configured, m.AppRoot))
 	}
+	// 应用自带/自动下载的内核优先于系统 PATH，避免误用版本不兼容的外部安装。
+	if m.AppRoot != "" {
+		candidates = append(candidates,
+			filepath.Join(m.AppRoot, "bin", "mihomo.exe"),
+			filepath.Join(m.AppRoot, "bin", "mihomo"),
+			filepath.Join(m.AppRoot, "bin", runtime.GOOS+"-"+runtime.GOARCH, "mihomo", "mihomo.exe"),
+			filepath.Join(m.AppRoot, "bin", runtime.GOOS+"-"+runtime.GOARCH, "mihomo", "mihomo"),
+			filepath.Join(m.AppRoot, "bin", runtime.GOOS+"-"+runtime.GOARCH, "mihomo.exe"),
+			filepath.Join(m.AppRoot, "bin", runtime.GOOS+"-"+runtime.GOARCH, "mihomo"),
+		)
+	}
 	for _, name := range []string{"mihomo.exe", "mihomo", "clash-meta.exe", "clash-meta", "clash.exe", "clash"} {
 		if path, err := exec.LookPath(name); err == nil {
 			candidates = append(candidates, path)
@@ -465,16 +476,6 @@ func (m *ClashManager) resolveMihomoBinary() (string, error) {
 				filepath.Join(appData, "mihomo-party", "core", "mihomo-windows-amd64.exe"),
 			)
 		}
-	}
-	if m.AppRoot != "" {
-		candidates = append(candidates,
-			filepath.Join(m.AppRoot, "bin", "mihomo.exe"),
-			filepath.Join(m.AppRoot, "bin", "mihomo"),
-			filepath.Join(m.AppRoot, "bin", runtime.GOOS+"-"+runtime.GOARCH, "mihomo", "mihomo.exe"),
-			filepath.Join(m.AppRoot, "bin", runtime.GOOS+"-"+runtime.GOARCH, "mihomo", "mihomo"),
-			filepath.Join(m.AppRoot, "bin", runtime.GOOS+"-"+runtime.GOARCH, "mihomo.exe"),
-			filepath.Join(m.AppRoot, "bin", runtime.GOOS+"-"+runtime.GOARCH, "mihomo"),
-		)
 	}
 	for _, candidate := range candidates {
 		candidate = fsutil.NormalizePathInput(candidate)
