@@ -164,7 +164,7 @@ func (s *LaunchServer) Start() error {
 	if auth.Active() {
 		log.Info("LaunchServer API 认证已启用", logger.F("header", auth.Header))
 	} else if auth.Requested() && !auth.Configured() {
-		log.Warn("LaunchServer API 认证配置未生效", logger.F("reason", "api_key is empty"), logger.F("header", auth.Header))
+		log.Warn("LaunchServer API 认证已启用但 api_key 为空，/api 请求将被拒绝", logger.F("header", auth.Header))
 	}
 	log.Info("LaunchServer 已启动", logger.F("port", port))
 

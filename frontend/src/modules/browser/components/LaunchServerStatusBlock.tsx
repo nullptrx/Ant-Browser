@@ -40,7 +40,7 @@ export function LaunchServerStatusBlock({
           {apiAuth.enabled
             ? <>当前 API 认证已启用，请为所有 <code>/api/*</code> 请求追加 <code>{apiAuth.header}: &lt;your-api-key&gt;</code>。</>
             : apiAuth.requested && !apiAuth.configured
-              ? <>当前配置要求启用 API 认证，但 <code>api_key</code> 为空，认证尚未生效。</>
+              ? <>当前配置要求启用 API 认证，但 <code>api_key</code> 为空，所有 <code>/api/*</code> 请求都会被拒绝，请在 <code>config.yaml</code> 中补充。</>
               : <>当前 API 认证未启用；如需开启，可在 <code>config.yaml</code> 的 <code>launch_server.auth</code> 下配置。</>}
         </p>
       </div>

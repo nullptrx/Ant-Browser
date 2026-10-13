@@ -73,8 +73,17 @@ func (s *LaunchServer) apiAuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		cfg := s.apiAuthConfig()
-		if !cfg.Active() {
+		if !cfg.Requested() {
 			next.ServeHTTP(w, r)
+			return
+		}
+		// 已要求认证但未配置 api_key 时拒绝请求，避免误以为已受保护而实际放行。
+		if !cfg.Configured() {
+			writeJSON(w, http.StatusServiceUnavailable, map[string]interface{}{
+				"ok":         false,
+				"error":      "api auth is enabled but api_key is empty",
+				"authHeader": cfg.Header,
+			})
 			return
 		}
 

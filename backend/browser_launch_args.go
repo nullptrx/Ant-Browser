@@ -21,6 +21,43 @@ var managedLaunchArgSpecs = []managedLaunchArgSpec{
 	{prefix: "--restore-last-session", takesValue: false},
 }
 
+// blockedLaunchArgSwitches 会让 Chromium 以任意命令启动子进程，或放开网页对 CDP 的访问；
+// 启动参数可能来自 Launch API、导入的实例或备份，一律丢弃。
+var blockedLaunchArgSwitches = map[string]struct{}{
+	"renderer-cmd-prefix":     {},
+	"utility-cmd-prefix":      {},
+	"zygote-cmd-prefix":       {},
+	"nacl-loader-cmd-prefix":  {},
+	"gpu-launcher":            {},
+	"ppapi-plugin-launcher":   {},
+	"plugin-launcher":         {},
+	"browser-subprocess-path": {},
+	"nacl-gdb":                {},
+	"remote-allow-origins":    {},
+}
+
+// launchArgSwitchName 按 Chromium 的解析规则提取开关名：接受 --、- 和 / 前缀，忽略大小写。
+func launchArgSwitchName(arg string) string {
+	name := strings.TrimSpace(arg)
+	switch {
+	case strings.HasPrefix(name, "--"):
+		name = name[2:]
+	case strings.HasPrefix(name, "-"), strings.HasPrefix(name, "/"):
+		name = name[1:]
+	default:
+		return ""
+	}
+	if index := strings.IndexByte(name, '='); index >= 0 {
+		name = name[:index]
+	}
+	return strings.ToLower(name)
+}
+
+func isBlockedLaunchArg(arg string) bool {
+	_, blocked := blockedLaunchArgSwitches[launchArgSwitchName(arg)]
+	return blocked
+}
+
 func sanitizeManagedLaunchArgs(args []string) ([]string, []string) {
 	if len(args) == 0 {
 		return nil, nil
@@ -32,6 +69,11 @@ func sanitizeManagedLaunchArgs(args []string) ([]string, []string) {
 	for i := 0; i < len(args); i++ {
 		arg := strings.TrimSpace(args[i])
 		if arg == "" {
+			continue
+		}
+
+		if isBlockedLaunchArg(arg) {
+			removed = appendUniqueString(removed, "--"+launchArgSwitchName(arg))
 			continue
 		}
 
@@ -66,7 +108,7 @@ func logManagedLaunchArgOverrides(log *logger.Logger, profileId string, source s
 	if log == nil || len(managedArgs) == 0 {
 		return
 	}
-	log.Warn("忽略由系统接管的浏览器启动参数",
+	log.Warn("忽略由系统接管或存在安全风险的浏览器启动参数",
 		logger.F("profile_id", profileId),
 		logger.F("source", source),
 		logger.F("managed_args", managedArgs),
