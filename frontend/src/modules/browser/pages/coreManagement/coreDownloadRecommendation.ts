@@ -53,9 +53,10 @@ const archiveSuffixes = ['.zip', '.tar.xz', '.txz', '.tar.gz', '.tgz', '.tar.bz2
 
 function normalizePlatform(value: string | undefined): CoreDownloadPlatform {
   const text = (value || '').trim().toLowerCase()
-  if (text.includes('win')) return 'windows'
-  if (text.includes('linux')) return 'linux'
+  // 必须先判断 darwin：'darwin' 本身包含子串 'win'。
   if (text.includes('darwin') || text.includes('mac')) return 'darwin'
+  if (text.includes('linux')) return 'linux'
+  if (text.startsWith('win')) return 'windows'
   return ''
 }
 

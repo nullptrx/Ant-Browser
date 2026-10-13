@@ -187,8 +187,10 @@ func (m *Manager) downloadAndExtractCore(ctx context.Context, coreInput CoreInpu
 		return
 	}
 
-	if !m.ValidateCorePath(tempExtractDir).Valid {
-		sendEvent("error", 0, fmt.Sprintf("解压后未找到当前平台可用的浏览器可执行文件（当前平台 %s，候选：%s），请检查压缩包内容！", CoreExecutablePlatform(), strings.Join(CoreExecutableCandidates(), ", ")))
+	if result := m.ValidateCorePath(tempExtractDir); !result.Valid {
+		entries := listExtractedEntries(tempExtractDir)
+		log.Error("解压后内核校验失败", logger.F("url", targetUrl), logger.F("reason", result.Message), logger.F("entries", entries))
+		sendEvent("error", 0, fmt.Sprintf("解压后未找到当前平台可用的浏览器可执行文件（当前平台 %s，原因：%s，解压内容：%s），请检查压缩包内容！", CoreExecutablePlatform(), result.Message, entries))
 		return
 	}
 
@@ -230,6 +232,33 @@ func (m *Manager) emitRuntimeEvent(ctx context.Context, eventName string, option
 	if ctx != nil {
 		runtime.EventsEmit(ctx, eventName, optionalData...)
 	}
+}
+
+// listExtractedEntries 列出解压目录前两层内容，便于定位压缩包结构与候选路径不符的原因。
+func listExtractedEntries(dir string) string {
+	var names []string
+	top, err := os.ReadDir(dir)
+	if err != nil {
+		return "读取失败: " + err.Error()
+	}
+	for _, entry := range top {
+		names = append(names, entry.Name())
+		if !entry.IsDir() {
+			continue
+		}
+		children, _ := os.ReadDir(filepath.Join(dir, entry.Name()))
+		for i, child := range children {
+			if i == 5 {
+				names = append(names, entry.Name()+"/...")
+				break
+			}
+			names = append(names, entry.Name()+"/"+child.Name())
+		}
+	}
+	if len(names) == 0 {
+		return "空"
+	}
+	return strings.Join(names, ", ")
 }
 
 func replaceCoreDirectory(targetDir string, tempExtractDir string, replaceExisting bool) error {
