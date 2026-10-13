@@ -50,7 +50,7 @@ browser:
     restore_last_session: false
     start_ready_timeout_ms: 3000
     start_stable_window_ms: 1200
-    default_connector_type: xray
+    default_connector_type: mihomo
 proxy_check:
     bridge_start_timeout_ms: 15000
     speed_target_id: ""

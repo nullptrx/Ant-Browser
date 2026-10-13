@@ -24,12 +24,12 @@ const (
 // NormalizeBrowserConnectorType 规范化连接栈配置。
 func NormalizeBrowserConnectorType(value string) string {
 	switch strings.ToLower(strings.TrimSpace(value)) {
-	case BrowserConnectorMihomo, "clash", "clash-meta":
+	case BrowserConnectorXray, "sing-box", "singbox", "sing_box":
+		return BrowserConnectorXray
+	case BrowserConnectorMihomo, "clash", "clash-meta", "":
 		return BrowserConnectorMihomo
-	case BrowserConnectorXray, "sing-box", "singbox", "sing_box", "":
-		return BrowserConnectorXray
 	default:
-		return BrowserConnectorXray
+		return BrowserConnectorMihomo
 	}
 }
 
@@ -290,7 +290,7 @@ func DefaultConfig() *Config {
 			RestoreLastSession:     false,
 			StartReadyTimeoutMs:    3000,
 			StartStableWindowMs:    1200,
-			DefaultConnectorType:   BrowserConnectorXray,
+			DefaultConnectorType:   BrowserConnectorMihomo,
 		},
 		ProxyCheck: ProxyCheckConfig{
 			BridgeStartTimeoutMs: 15000,

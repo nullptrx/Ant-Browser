@@ -15,7 +15,7 @@ function defaultProxyCoreTarget(): { goos: string; goarch: string } {
 export function useProxyCoreDownload() {
   const defaultTarget = defaultProxyCoreTarget()
   const [coreDownloadOpen, setCoreDownloadOpen] = useState(false)
-  const [coreDownloadType, setCoreDownloadType] = useState('xray')
+  const [coreDownloadType, setCoreDownloadType] = useState('mihomo')
   const [coreDownloadGOOS, setCoreDownloadGOOS] = useState(defaultTarget.goos)
   const [coreDownloadGOARCH, setCoreDownloadGOARCH] = useState(defaultTarget.goarch)
   const [coreDownloadProxy, setCoreDownloadProxy] = useState('')
@@ -26,7 +26,7 @@ export function useProxyCoreDownload() {
 
   const refreshCurrentCoreStatus = useCallback(async (core: string) => {
     const target = defaultProxyCoreTarget()
-    const status = await browserProxyCoreStatus(core || 'xray', target.goos, target.goarch)
+    const status = await browserProxyCoreStatus(core || 'mihomo', target.goos, target.goarch)
     setCurrentCoreStatus(status)
     return status
   }, [])
@@ -48,7 +48,7 @@ export function useProxyCoreDownload() {
 
   const loadBrowserSettings = useCallback(async () => {
     try {
-      await refreshCurrentCoreStatus('xray')
+      await refreshCurrentCoreStatus('mihomo')
     } catch (error: any) {
       toast.error(error?.message || '读取代理内核状态失败')
     }

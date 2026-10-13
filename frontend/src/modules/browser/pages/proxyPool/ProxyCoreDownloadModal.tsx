@@ -102,8 +102,8 @@ export function ProxyCoreDownloadModal({
             onChange={e => onCoreChange(e.target.value)}
             disabled={downloading}
             options={[
-              { value: 'xray', label: 'Xray（默认）' },
-              { value: 'mihomo', label: 'Mihomo' },
+              { value: 'mihomo', label: 'Mihomo（默认）' },
+              { value: 'xray', label: 'Xray' },
               { value: 'sing-box', label: 'sing-box' },
             ]}
           />

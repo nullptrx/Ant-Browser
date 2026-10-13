@@ -178,7 +178,7 @@ Ant Browser 适合以下场景：
 
 代理连接栈规则：
 
-- `default_connector_type` 只有两套连接栈：`xray` 和 `mihomo`。
+- `default_connector_type` 只有两套连接栈：`xray` 和 `mihomo`，未配置时默认 `mihomo`。
 - `xray` 表示 Xray + sing-box 组合栈：Xray 负责 vmess/vless/trojan/shadowsocks/链式代理等，sing-box 负责 hysteria2/tuic/anytls 等协议。
 - `mihomo` 表示独立 Mihomo 栈：需要桥接的代理统一走 mihomo。
 - 实例启动、代理测速、真实连通性、IP 健康、预热和插件下载代理必须按当前连接栈执行；不得在 `xray` 组合栈和 `mihomo` 栈之间自动混用。

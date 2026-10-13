@@ -30,7 +30,7 @@ export function CoreManagementPage() {
     restoreLastSession: false,
     startReadyTimeoutMs: 3000,
     startStableWindowMs: 1200,
-    defaultConnectorType: 'xray',
+    defaultConnectorType: 'mihomo',
   })
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const [settingsForm, setSettingsForm] = useState<CoreSettingsForm>({
@@ -461,7 +461,7 @@ export function CoreManagementPage() {
         restoreLastSession: settingsForm.restoreLastSession,
         startReadyTimeoutMs: Math.max(1000, Number(settingsForm.startReadyTimeoutMs) || 3000),
         startStableWindowMs: Math.max(0, Number(settingsForm.startStableWindowMs) || 1200),
-        defaultConnectorType: settings.defaultConnectorType || 'xray',
+        defaultConnectorType: settings.defaultConnectorType || 'mihomo',
       }
       await saveBrowserSettings(newSettings)
       setSettings(newSettings)

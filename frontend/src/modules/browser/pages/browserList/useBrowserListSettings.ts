@@ -20,7 +20,7 @@ const DEFAULT_BROWSER_SETTINGS: BrowserSettings = {
   restoreLastSession: false,
   startReadyTimeoutMs: 3000,
   startStableWindowMs: 1200,
-  defaultConnectorType: 'xray',
+  defaultConnectorType: 'mihomo',
 }
 
 export function useBrowserListSettings() {

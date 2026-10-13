@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"ant-chrome/backend/internal/apppath"
+	"ant-chrome/backend/internal/config"
 	"ant-chrome/backend/internal/fsutil"
 )
 
@@ -55,10 +56,7 @@ func proxyCoreIsActive(a *App, spec proxyCoreSpec) bool {
 	if a == nil || a.config == nil {
 		return false
 	}
-	current := strings.ToLower(strings.TrimSpace(a.config.Browser.DefaultConnectorType))
-	if current == "" {
-		current = "xray"
-	}
+	current := config.NormalizeBrowserConnectorType(a.config.Browser.DefaultConnectorType)
 	switch spec.Core {
 	case "xray":
 		return current == "xray"
