@@ -174,6 +174,8 @@ type BrowserBookmark struct {
 	Name        string `yaml:"name" json:"name"`
 	URL         string `yaml:"url" json:"url"`
 	OpenOnStart bool   `yaml:"open_on_start,omitempty" json:"openOnStart"`
+	// Disabled 为 true 时不写入实例书签栏，并从已有实例书签栏移除；零值兼容历史数据（默认加入）。
+	Disabled bool `yaml:"disabled,omitempty" json:"disabled"`
 }
 
 type BrowserConfig struct {

@@ -93,6 +93,54 @@ func EnsureDefaultBookmarks(userDataDir string, bookmarks []config.BrowserBookma
 	return os.WriteFile(bookmarksPath, out, 0644)
 }
 
+// RemoveBookmarkBarURLs 从书签栏第一层移除指定 URL 的书签（默认书签只写在这一层），
+// 不动子文件夹和其他书签根，避免误删用户自己整理的书签。
+func RemoveBookmarkBarURLs(userDataDir string, urls []string) (bool, error) {
+	if len(urls) == 0 {
+		return false, nil
+	}
+	targets := make(map[string]bool, len(urls))
+	for _, u := range urls {
+		if u = strings.ToLower(strings.TrimSpace(u)); u != "" {
+			targets[u] = true
+		}
+	}
+	bookmarksPath := filepath.Join(userDataDir, "Default", "Bookmarks")
+	data, err := os.ReadFile(bookmarksPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	var root map[string]interface{}
+	if err := json.Unmarshal(data, &root); err != nil {
+		return false, fmt.Errorf("解析书签失败: %w", err)
+	}
+	roots, _ := root["roots"].(map[string]interface{})
+	bar, _ := roots["bookmark_bar"].(map[string]interface{})
+	children, _ := bar["children"].([]interface{})
+	kept := make([]interface{}, 0, len(children))
+	for _, item := range children {
+		node, _ := item.(map[string]interface{})
+		urlValue, _ := node["url"].(string)
+		if node["type"] == "url" && targets[strings.ToLower(strings.TrimSpace(urlValue))] {
+			continue
+		}
+		kept = append(kept, item)
+	}
+	if len(kept) == len(children) {
+		return false, nil
+	}
+	bar["children"] = kept
+	bar["date_modified"] = toChromiumTime(time.Now())
+	out, err := json.MarshalIndent(root, "", "   ")
+	if err != nil {
+		return false, fmt.Errorf("序列化书签失败: %w", err)
+	}
+	return true, os.WriteFile(bookmarksPath, out, 0644)
+}
+
 // ReplaceBookmarkURL 将已有书签中的 oldURL 更新为 newURL，用于修复运行时动态书签地址。
 func ReplaceBookmarkURL(userDataDir string, oldURL string, newURL string) (bool, error) {
 	oldURL = strings.TrimSpace(oldURL)

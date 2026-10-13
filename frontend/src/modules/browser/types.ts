@@ -452,6 +452,7 @@ export interface BrowserBookmark {
   name: string
   url: string
   openOnStart?: boolean
+  disabled?: boolean
 }
 
 export interface BookmarkSyncResult {

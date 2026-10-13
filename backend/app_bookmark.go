@@ -28,6 +28,7 @@ var defaultBookmarkList = []BrowserBookmark{
 	{Name: "IPPure", URL: "https://ippure.com/"},
 	{Name: "IPLark", URL: "https://iplark.com/"},
 	{Name: "Ping0", URL: "https://ping0.cc/"},
+	{Name: "IP.SB", URL: "https://ip.sb/"},
 }
 
 var verificationBookmarkList = []BrowserBookmark{
@@ -35,6 +36,7 @@ var verificationBookmarkList = []BrowserBookmark{
 	{Name: "IPPure", URL: "https://ippure.com/"},
 	{Name: "IPLark", URL: "https://iplark.com/"},
 	{Name: "Ping0", URL: "https://ping0.cc/"},
+	{Name: "IP.SB", URL: "https://ip.sb/"},
 }
 
 var protectedBookmarkList = []BrowserBookmark{
@@ -63,7 +65,7 @@ func (a *App) BookmarkSave(items []BrowserBookmark) error {
 		name := strings.TrimSpace(item.Name)
 		url := strings.TrimSpace(item.URL)
 		if name != "" && url != "" {
-			valid = append(valid, BrowserBookmark{Name: name, URL: url, OpenOnStart: item.OpenOnStart})
+			valid = append(valid, BrowserBookmark{Name: name, URL: url, OpenOnStart: item.OpenOnStart, Disabled: item.Disabled})
 		}
 	}
 	valid = normalizeBookmarkList(valid)
@@ -106,7 +108,7 @@ func mergeBookmarksByURL(items []BrowserBookmark, required []BrowserBookmark) []
 			return
 		}
 		seen[key] = struct{}{}
-		merged = append(merged, BrowserBookmark{Name: name, URL: url, OpenOnStart: item.OpenOnStart})
+		merged = append(merged, BrowserBookmark{Name: name, URL: url, OpenOnStart: item.OpenOnStart, Disabled: item.Disabled})
 	}
 	for _, item := range items {
 		appendOne(item)
@@ -118,15 +120,16 @@ func mergeBookmarksByURL(items []BrowserBookmark, required []BrowserBookmark) []
 }
 
 func normalizeBookmarkList(items []BrowserBookmark) []BrowserBookmark {
-	protectedOpenOnStart := map[string]bool{}
+	protectedState := map[string]BrowserBookmark{}
 	for _, item := range items {
 		if strings.EqualFold(strings.TrimSpace(item.URL), fingerprintCheckBookmarkURL) {
-			protectedOpenOnStart[fingerprintCheckBookmarkURL] = item.OpenOnStart
+			protectedState[fingerprintCheckBookmarkURL] = item
 		}
 	}
 	protected := make([]BrowserBookmark, 0, len(protectedBookmarkList))
 	for _, item := range protectedBookmarkList {
-		item.OpenOnStart = protectedOpenOnStart[item.URL]
+		item.OpenOnStart = protectedState[item.URL].OpenOnStart
+		item.Disabled = protectedState[item.URL].Disabled
 		protected = append(protected, item)
 	}
 	regular := make([]BrowserBookmark, 0, len(items)+len(verificationBookmarkList))
@@ -152,7 +155,25 @@ func normalizeBookmarkList(items []BrowserBookmark) []BrowserBookmark {
 	return out
 }
 
-// BookmarkSyncToProfiles 将当前默认书签增量同步到已有未运行实例。
+// applyDefaultBookmarks 把勾选的默认书签合并进实例书签栏，并移除未勾选的默认书签。
+// runtimeBookmarks 需已替换为实例运行时地址（如指纹检测页的 file:// 地址）。
+func applyDefaultBookmarks(userDataDir string, runtimeBookmarks []BrowserBookmark) error {
+	enabled := make([]BrowserBookmark, 0, len(runtimeBookmarks))
+	var disabledURLs []string
+	for _, item := range runtimeBookmarks {
+		if item.Disabled {
+			disabledURLs = append(disabledURLs, item.URL)
+			continue
+		}
+		enabled = append(enabled, item)
+	}
+	if _, err := browser.RemoveBookmarkBarURLs(userDataDir, disabledURLs); err != nil {
+		return err
+	}
+	return browser.EnsureDefaultBookmarks(userDataDir, enabled)
+}
+
+// BookmarkSyncToProfiles 将当前默认书签同步到已有未运行实例。
 func (a *App) BookmarkSyncToProfiles() BookmarkSyncResult {
 	result := BookmarkSyncResult{}
 	log := logger.New("Bookmark")
@@ -213,7 +234,7 @@ func (a *App) BookmarkSyncToProfiles() BookmarkSyncResult {
 				continue
 			}
 		}
-		if err := browser.EnsureDefaultBookmarks(userDataDir, runtimeBookmarks); err != nil {
+		if err := applyDefaultBookmarks(userDataDir, runtimeBookmarks); err != nil {
 			result.Failed++
 			name := profile.ProfileName
 			if name == "" {

@@ -224,7 +224,18 @@ WHERE EXISTS (SELECT 1 FROM temp.backup_import_profile_map m WHERE m.source_id =
 			if err != nil {
 				return nil, err
 			}
-			if hasOpenOnStart {
+			hasDisabled, err := backupSrcColumnExists(tx, item.name, "disabled")
+			if err != nil {
+				return nil, err
+			}
+			if hasOpenOnStart && hasDisabled {
+				sqlText = `INSERT INTO browser_bookmarks (name, url, open_on_start, disabled, sort_order)
+SELECT s.name, s.url, COALESCE(s.open_on_start,0), COALESCE(s.disabled,0), s.sort_order
+FROM src.browser_bookmarks s
+WHERE NOT EXISTS (
+  SELECT 1 FROM browser_bookmarks t WHERE lower(t.url) = lower(s.url)
+)`
+			} else if hasOpenOnStart {
 				sqlText = `INSERT INTO browser_bookmarks (name, url, open_on_start, sort_order)
 SELECT s.name, s.url, COALESCE(s.open_on_start,0), s.sort_order
 FROM src.browser_bookmarks s

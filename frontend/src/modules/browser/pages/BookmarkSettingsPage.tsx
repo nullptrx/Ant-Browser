@@ -5,9 +5,19 @@ import type { BrowserBookmark } from '../types'
 import { fetchBookmarks, resetBookmarks, saveBookmarks, syncBookmarksToProfiles } from '../api'
 
 const fingerprintCheckBookmarkUrl = 'ant://fingerprint-check'
+// 与后端 verificationBookmarkList 保持一致：这些检测站点总会保留在列表中，只能勾选是否加入书签栏。
+const builtinBookmarkUrls = [
+  fingerprintCheckBookmarkUrl,
+  'https://ippure.com/',
+  'https://iplark.com/',
+  'https://ping0.cc/',
+  'https://ip.sb/',
+]
 
 const isProtectedBookmark = (item: BrowserBookmark) =>
-  item.url.trim().toLowerCase() === fingerprintCheckBookmarkUrl
+  builtinBookmarkUrls.includes(item.url.trim().toLowerCase())
+
+const checkboxClassName = 'h-4 w-4 rounded border-[var(--color-border-default)] accent-[var(--color-accent)]'
 
 export function BookmarkSettingsPage() {
   const [items, setItems] = useState<BrowserBookmark[]>([])
@@ -34,7 +44,7 @@ export function BookmarkSettingsPage() {
   }
 
   const handleAdd = () => {
-    setItems(prev => [...prev, { name: '', url: '', openOnStart: false }])
+    setItems(prev => [...prev, { name: '', url: '', openOnStart: false, disabled: false }])
   }
 
   const handleDelete = (index: number) => {
@@ -45,6 +55,33 @@ export function BookmarkSettingsPage() {
   const handleOpenOnStartChange = (index: number, checked: boolean) => {
     setItems(prev => prev.map((item, i) => i === index ? { ...item, openOnStart: checked } : item))
   }
+
+  const handleEnabledChange = (index: number, checked: boolean) => {
+    setItems(prev => prev.map((item, i) => i === index ? { ...item, disabled: !checked } : item))
+  }
+
+  const renderToggles = (item: BrowserBookmark, index: number) => (
+    <>
+      <label className="flex items-center gap-1.5 px-2 text-xs text-[var(--color-text-secondary)] whitespace-nowrap select-none">
+        <input
+          type="checkbox"
+          checked={!item.disabled}
+          onChange={e => handleEnabledChange(index, e.target.checked)}
+          className={checkboxClassName}
+        />
+        书签栏
+      </label>
+      <label className="flex items-center gap-1.5 px-2 text-xs text-[var(--color-text-secondary)] whitespace-nowrap select-none">
+        <input
+          type="checkbox"
+          checked={Boolean(item.openOnStart)}
+          onChange={e => handleOpenOnStartChange(index, e.target.checked)}
+          className={checkboxClassName}
+        />
+        启动打开
+      </label>
+    </>
+  )
 
   const handleSave = async () => {
     const valid = items.filter(i => i.name.trim() && i.url.trim())
@@ -142,7 +179,7 @@ export function BookmarkSettingsPage() {
           {protectedItems.map(({ item, index }) => (
             <div
               key={`${item.url}-${index}`}
-              className="flex items-center gap-2 p-2.5 rounded-xl bg-[var(--color-bg-muted)] shadow-[var(--shadow-sm)]"
+              className={`flex items-center gap-2 p-2.5 rounded-xl bg-[var(--color-bg-muted)] shadow-[var(--shadow-sm)] ${item.disabled ? 'opacity-60' : ''}`}
             >
               <GripVertical className="w-4 h-4 text-[var(--color-text-muted)] opacity-40 shrink-0" />
               <Input
@@ -155,15 +192,7 @@ export function BookmarkSettingsPage() {
                 readOnly
                 className="flex-1 bg-[var(--color-bg-subtle)]"
               />
-              <label className="flex items-center gap-1.5 px-2 text-xs text-[var(--color-text-secondary)] whitespace-nowrap select-none">
-                <input
-                  type="checkbox"
-                  checked={Boolean(item.openOnStart)}
-                  onChange={e => handleOpenOnStartChange(index, e.target.checked)}
-                  className="h-4 w-4 rounded border-[var(--color-border-default)] accent-[var(--color-accent)]"
-                />
-                启动打开
-              </label>
+              {renderToggles(item, index)}
               <span className="px-2 py-1 rounded-lg bg-[var(--color-bg-subtle)] text-xs text-[var(--color-text-muted)] shrink-0">
                 内置
               </span>
@@ -181,7 +210,7 @@ export function BookmarkSettingsPage() {
               onDragStart={() => handleDragStart(index)}
               onDragOver={e => handleDragOver(e, index)}
               onDragEnd={handleDragEnd}
-              className={`flex items-center gap-2 p-2.5 rounded-xl shadow-[var(--shadow-sm)] transition-all duration-150 ${
+              className={`flex items-center gap-2 p-2.5 rounded-xl shadow-[var(--shadow-sm)] transition-all duration-150 ${item.disabled ? 'opacity-60' : ''} ${
                 dragIndex === index
                   ? 'bg-[var(--color-accent-muted)] ring-1 ring-[var(--color-border-strong)]'
                   : 'bg-[var(--color-bg-muted)] hover:bg-[var(--color-bg-subtle)]'
@@ -200,15 +229,7 @@ export function BookmarkSettingsPage() {
                 placeholder="https://..."
                 className="flex-1"
               />
-              <label className="flex items-center gap-1.5 px-2 text-xs text-[var(--color-text-secondary)] whitespace-nowrap select-none">
-                <input
-                  type="checkbox"
-                  checked={Boolean(item.openOnStart)}
-                  onChange={e => handleOpenOnStartChange(index, e.target.checked)}
-                  className="h-4 w-4 rounded border-[var(--color-border-default)] accent-[var(--color-accent)]"
-                />
-                启动打开
-              </label>
+              {renderToggles(item, index)}
               <button
                 type="button"
                 onClick={() => handleDelete(index)}
@@ -251,7 +272,7 @@ export function BookmarkSettingsPage() {
         onClose={() => setSyncOpen(false)}
         onConfirm={handleSync}
         title="手动同步已有实例"
-        content="只会增量追加缺失的默认书签，不会删除、改名或移动用户已有书签。运行中的实例会跳过。"
+        content="勾选“书签栏”的书签会追加到实例书签栏，未勾选的会从书签栏第一层移除；用户自己添加的其他书签不受影响。运行中的实例会跳过。"
         confirmText="开始同步"
       />
     </div>

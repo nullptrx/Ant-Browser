@@ -259,6 +259,13 @@ var migrations = []migration{
 			`UPDATE browser_extensions SET default_install = 0`,
 		},
 	},
+	{
+		version: 18,
+		desc:    "默认书签可选择是否加入书签栏",
+		stmts: []string{
+			`ALTER TABLE browser_bookmarks ADD COLUMN disabled INTEGER NOT NULL DEFAULT 0`,
+		},
+	},
 	// ── 新版本在此追加，格式：
 	// {
 	//     version: 4,

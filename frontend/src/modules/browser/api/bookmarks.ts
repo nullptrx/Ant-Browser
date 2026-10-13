@@ -16,6 +16,7 @@ export async function fetchBookmarks(): Promise<BrowserBookmark[]> {
     { name: 'IPPure', url: 'https://ippure.com/', openOnStart: false },
     { name: 'IPLark', url: 'https://iplark.com/', openOnStart: false },
     { name: 'Ping0', url: 'https://ping0.cc/', openOnStart: false },
+    { name: 'IP.SB', url: 'https://ip.sb/', openOnStart: false },
   ]
 }
 

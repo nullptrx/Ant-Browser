@@ -265,7 +265,7 @@ func (a *App) prepareBrowserLaunchContext(input browserStartInput, profile *Brow
 			log.Warn("旧指纹检测书签更新失败", logger.F("profile_id", input.ProfileID), logger.F("error", err.Error()))
 		}
 	}
-	if err := browser.EnsureDefaultBookmarks(userDataDir, runtimeBookmarks); err != nil {
+	if err := applyDefaultBookmarks(userDataDir, runtimeBookmarks); err != nil {
 		log.Error("默认书签写入失败", logger.F("error", err.Error()))
 	}
 	if err := writeBrowserLanguagePreferences(userDataDir, fingerprintLaunchArgs); err != nil {
