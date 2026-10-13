@@ -105,6 +105,7 @@ jobs:
           test -x "$validate_dir/ant-chrome"
           test -x "$validate_dir/bin/xray"
           test -x "$validate_dir/bin/sing-box"
+          test -x "$validate_dir/bin/mihomo"
           test -f "$validate_dir/config.yaml"
 
       - name: Upload artifacts

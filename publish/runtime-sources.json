@@ -89,6 +89,61 @@
       "archiveSha256": "6dd10bb5bb100c3e9db17b0b88abd2eff00b9c1daea29fffda9142b67f169d9d",
       "archiveBinaryPath": "sing-box-1.12.17-darwin-arm64/sing-box",
       "destPath": "bin/darwin-arm64/sing-box"
+    },
+    {
+      "id": "mihomo-darwin-arm64",
+      "target": "darwin-arm64",
+      "runtime": "mihomo",
+      "version": "1.19.27",
+      "archiveType": "gz",
+      "url": "https://github.com/MetaCubeX/mihomo/releases/download/v1.19.27/mihomo-darwin-arm64-v1.19.27.gz",
+      "archiveSha256": "3617c9d8a5a55aecfe1ebd0f55ff59f2706c8ad68fd65c6c4e5f7cf2b74263f1",
+      "archiveBinaryPath": "mihomo-darwin-arm64-v1.19.27",
+      "destPath": "bin/darwin-arm64/mihomo"
+    },
+    {
+      "id": "mihomo-darwin-amd64",
+      "target": "darwin-amd64",
+      "runtime": "mihomo",
+      "version": "1.19.27",
+      "archiveType": "gz",
+      "url": "https://github.com/MetaCubeX/mihomo/releases/download/v1.19.27/mihomo-darwin-amd64-compatible-v1.19.27.gz",
+      "archiveSha256": "ddfafe6993e0adf97420d126d5ce7868113174630ccbf36d4a1bee2784085172",
+      "archiveBinaryPath": "mihomo-darwin-amd64-compatible-v1.19.27",
+      "destPath": "bin/darwin-amd64/mihomo"
+    },
+    {
+      "id": "mihomo-linux-arm64",
+      "target": "linux-arm64",
+      "runtime": "mihomo",
+      "version": "1.19.27",
+      "archiveType": "gz",
+      "url": "https://github.com/MetaCubeX/mihomo/releases/download/v1.19.27/mihomo-linux-arm64-v1.19.27.gz",
+      "archiveSha256": "87db0c6660a9557a901b5750f997967e71d8c0af07ea1d1dd4d04c28da7f7e6f",
+      "archiveBinaryPath": "mihomo-linux-arm64-v1.19.27",
+      "destPath": "bin/linux-arm64/mihomo"
+    },
+    {
+      "id": "mihomo-linux-amd64",
+      "target": "linux-amd64",
+      "runtime": "mihomo",
+      "version": "1.19.27",
+      "archiveType": "gz",
+      "url": "https://github.com/MetaCubeX/mihomo/releases/download/v1.19.27/mihomo-linux-amd64-compatible-v1.19.27.gz",
+      "archiveSha256": "36850c946615f5c712946b62dbbbd06f6941d6d8a7543b315198bcb24ada3ea9",
+      "archiveBinaryPath": "mihomo-linux-amd64-compatible-v1.19.27",
+      "destPath": "bin/linux-amd64/mihomo"
+    },
+    {
+      "id": "mihomo-windows-amd64",
+      "target": "windows-amd64",
+      "runtime": "mihomo",
+      "version": "1.19.27",
+      "archiveType": "zip",
+      "url": "https://github.com/MetaCubeX/mihomo/releases/download/v1.19.27/mihomo-windows-amd64-compatible-v1.19.27.zip",
+      "archiveSha256": "9cddc00240ed90d0bbd8333c1ff2b83152eb03c6bcddfbb5a17714a3272c1e88",
+      "archiveBinaryPath": "mihomo-windows-amd64-compatible.exe",
+      "destPath": "bin/mihomo.exe"
     }
   ]
 }

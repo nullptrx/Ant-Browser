@@ -133,7 +133,7 @@ Ant Browser 适合以下场景：
 
 - `master`：面向开发者的干净基线分支，不提交 `data/app.db`、实例目录或其他用户数据。首次启动时会自动初始化空数据库。
 - `user_data`：在 `master` 基础上额外提交一份 `data/app.db` 测试快照，便于演示、联调和复现问题。
-- 代理运行时 `bin/xray.exe`、`bin/sing-box.exe` 已随源码仓库提供；开发和发布打包不需要再单独下载这些运行时文件。
+- 代理运行时 `bin/xray.exe`、`bin/sing-box.exe`、`bin/mihomo.exe` 已随源码仓库提供；开发和发布打包不需要再单独下载这些运行时文件。
 
 ## 核心特性
 
@@ -228,7 +228,7 @@ Ant Browser 适合以下场景：
 1. 开发默认使用 `master` 分支；该分支不带测试用户数据，适合作为日常开发基线。
 2. 如需带测试库的演示环境，请切换到 `user_data` 分支。
 3. Windows 统一执行 `bat\dev.bat`；默认是 `stable` 静态资源模式，需要热更新时使用 `bat\dev.bat live`，需要受限内存复现时使用 `bat\dev.bat limited`。
-4. Windows 运行时使用 `bin/xray.exe`、`bin/sing-box.exe`；Linux 运行时使用 `bin/linux-<arch>/xray`、`bin/linux-<arch>/sing-box`；macOS 运行时使用 `bin/darwin-<arch>/xray`、`bin/darwin-<arch>/sing-box`。
+4. Windows 运行时使用 `bin/xray.exe`、`bin/sing-box.exe`、`bin/mihomo.exe`；Linux 运行时使用 `bin/linux-<arch>/xray`、`bin/linux-<arch>/sing-box`、`bin/linux-<arch>/mihomo`；macOS 运行时使用 `bin/darwin-<arch>/xray`、`bin/darwin-<arch>/sing-box`、`bin/darwin-<arch>/mihomo`。
 5. 运行时文件采用“仓库固定 + 哈希校验”，校验清单在 `publish/runtime-manifest.json`，固定来源清单在 `publish/runtime-sources.json`。
 6. 如需刷新 Linux / macOS 运行时，执行 `python3 tools/runtime/sync-runtime.py --target <target>`（会按固定来源下载、校验归档并更新 manifest）。
 

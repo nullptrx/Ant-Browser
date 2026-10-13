@@ -6,7 +6,7 @@ The repository currently supports unsigned macOS internal packages:
 
 - local builds for `darwin/amd64` and `darwin/arm64`
 - `.app` and `.zip` output from `publish/mac/publish-mac.sh`
-- pinned Darwin `xray` and `sing-box` runtimes with manifest verification
+- pinned Darwin `xray`, `sing-box` and `mihomo` runtimes with manifest verification
 - writable application state outside the `.app` bundle
 - manual GitHub Actions builds for both architectures
 
@@ -71,6 +71,7 @@ The current assembly layout is intentionally simple:
 Ant Browser.app/Contents/MacOS/ant-chrome
 Ant Browser.app/Contents/MacOS/bin/xray
 Ant Browser.app/Contents/MacOS/bin/sing-box
+Ant Browser.app/Contents/MacOS/bin/mihomo
 Ant Browser.app/Contents/MacOS/config.yaml
 Ant Browser.app/Contents/MacOS/chrome/README.md
 ```
@@ -101,6 +102,6 @@ The repository and CI currently validate package assembly and file structure. A 
 - first launch from Finder and `/Applications`
 - user-state creation and migration
 - browser-core detection and instance startup
-- `xray` and `sing-box` process startup
+- `xray`, `sing-box` and `mihomo` process startup
 - clean window close and application quit
 - signing, notarization, and Gatekeeper behavior

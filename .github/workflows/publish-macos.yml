@@ -66,6 +66,7 @@ jobs:
           test -x "$app_path/Contents/MacOS/ant-chrome"
           test -x "$app_path/Contents/MacOS/bin/xray"
           test -x "$app_path/Contents/MacOS/bin/sing-box"
+          test -x "$app_path/Contents/MacOS/bin/mihomo"
           plutil -lint "$app_path/Contents/Info.plist"
           ditto -x -k "$zip_path" /tmp/ant-browser-macos-validate
           test -x "/tmp/ant-browser-macos-validate/$(basename "$app_path")/Contents/MacOS/ant-chrome"

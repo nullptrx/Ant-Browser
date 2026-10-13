@@ -564,14 +564,14 @@ function New-WindowsStaging {
     $stagingBinDir = Join-Path $stagingDir "bin"
     New-Item -ItemType Directory -Path $stagingBinDir -Force | Out-Null
 
-    foreach ($required in @("xray.exe", "sing-box.exe")) {
+    foreach ($required in @("xray.exe", "sing-box.exe", "mihomo.exe")) {
         $source = Join-Path $binDir $required
         if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
             throw "缺少运行时文件: bin\$required"
         }
         Copy-Item -LiteralPath $source -Destination (Join-Path $stagingBinDir $required) -Force
     }
-    Write-Host "✓ 复制 bin\（xray.exe, sing-box.exe）"
+    Write-Host "✓ 复制 bin\（xray.exe, sing-box.exe, mihomo.exe）"
 
     Copy-WindowsChromePayload -ChromeRoot $chromeRoot -StagingDir $stagingDir
 

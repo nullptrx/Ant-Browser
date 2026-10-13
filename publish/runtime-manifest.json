@@ -19,6 +19,14 @@
       "note": "legacy windows path"
     },
     {
+      "path": "bin/mihomo.exe",
+      "sha256": "58a8136fdb87d4eee7e3518041b0769cc5e673a7ca98dfc030f99a47ff49588f",
+      "targets": [
+        "windows-amd64"
+      ],
+      "note": "legacy windows path"
+    },
+    {
       "path": "bin/linux-amd64/xray",
       "sha256": "3f650abf1fc4a4fbf5abe7fc9990a2658020907cd984214e9c075b4b00989fea",
       "targets": [
@@ -28,6 +36,13 @@
     {
       "path": "bin/linux-amd64/sing-box",
       "sha256": "7f768c4b158264bfc7275e2e540acef0de0c5e28f35762513ec6ee4b8cbf80db",
+      "targets": [
+        "linux-amd64"
+      ]
+    },
+    {
+      "path": "bin/linux-amd64/mihomo",
+      "sha256": "ab33dead65aaa95bc03b722f155d95f1003ac00517de6726e9b8d56ef9bbec92",
       "targets": [
         "linux-amd64"
       ]
@@ -47,6 +62,13 @@
       ]
     },
     {
+      "path": "bin/linux-arm64/mihomo",
+      "sha256": "1322d55156f4f1f7dcbdccaa34c7fabf6a4f2831d584454c197d364f7f760d2e",
+      "targets": [
+        "linux-arm64"
+      ]
+    },
+    {
       "path": "bin/darwin-amd64/xray",
       "sha256": "c9f5f35e8ad3649a03c75291278eab2c470573bd0e0d34da506bab3a09673172",
       "targets": [
@@ -61,6 +83,13 @@
       ]
     },
     {
+      "path": "bin/darwin-amd64/mihomo",
+      "sha256": "b439a1ee6a71273a03b575ea8852c7bfc64a6a1870a103724cb4d3b61e2bac8c",
+      "targets": [
+        "darwin-amd64"
+      ]
+    },
+    {
       "path": "bin/darwin-arm64/xray",
       "sha256": "76fea3ec3610c2cc462ef39422ddc00e6d306b0c90223c983eaced6b12c8dee8",
       "targets": [
@@ -70,6 +99,13 @@
     {
       "path": "bin/darwin-arm64/sing-box",
       "sha256": "0b3e7947b53c798adadd282e45748117a7820b21bfb10a7e1a43b46f02fac97a",
+      "targets": [
+        "darwin-arm64"
+      ]
+    },
+    {
+      "path": "bin/darwin-arm64/mihomo",
+      "sha256": "6f01da0543dc3043b7e1a79fae421f0f3003cc05bcd6a1d0a211eb9ddc5656d6",
       "targets": [
         "darwin-arm64"
       ]

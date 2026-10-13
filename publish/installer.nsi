@@ -289,11 +289,12 @@ Section "Ant Browser (required)" SecMain
   CreateShortcut "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall.lnk" "$INSTDIR\Uninstall.exe" "" "$INSTDIR\${PRODUCT_ICON}"
 SectionEnd
 
-Section "Proxy Runtime (xray / sing-box)" SecRuntime
+Section "Proxy Runtime (xray / sing-box / mihomo)" SecRuntime
   SectionIn RO
   SetOutPath "$INSTDIR\bin"
   File "${STAGINGDIR}\bin\xray.exe"
   File "${STAGINGDIR}\bin\sing-box.exe"
+  File "${STAGINGDIR}\bin\mihomo.exe"
 SectionEnd
 
 Section /o "Desktop Shortcut" SecDesktop
@@ -302,7 +303,7 @@ SectionEnd
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
   !insertmacro MUI_DESCRIPTION_TEXT ${SecMain}    "Ant Browser main program and default config (required)"
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecRuntime} "xray and sing-box proxy tools (vless/vmess/hysteria2)"
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecRuntime} "xray, sing-box and mihomo proxy tools (vless/vmess/hysteria2)"
   !insertmacro MUI_DESCRIPTION_TEXT ${SecDesktop} "Create a shortcut on the desktop"
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 

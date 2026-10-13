@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import gzip
 import hashlib
 import http.client
 import json
@@ -33,6 +34,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--target",
         help="Only sync one target. Default: sync all targets in sources file.",
+    )
+    parser.add_argument(
+        "--runtime",
+        help="Only sync one runtime (xray, sing-box, mihomo). Default: all runtimes.",
     )
     parser.add_argument(
         "--sources",
@@ -142,6 +147,10 @@ def extract_binary(archive: Path, archive_type: str, inner_path: str, dest: Path
                 raise RuntimeError(f"file not found in tar.gz archive: {member}")
             with fobj, dest.open("wb") as out:
                 shutil.copyfileobj(fobj, out)
+    elif archive_type == "gz":
+        # 单文件 gzip（如 mihomo），archiveBinaryPath 仅用于说明，内容即二进制本身。
+        with gzip.open(archive, "rb") as src, dest.open("wb") as out:
+            shutil.copyfileobj(src, out)
     else:
         raise RuntimeError(f"unsupported archiveType: {archive_type}")
 
@@ -161,6 +170,8 @@ def main() -> int:
     sources = load_sources(sources_path)
     if args.target:
         sources = [s for s in sources if s.get("target") == args.target]
+    if args.runtime:
+        sources = [s for s in sources if s.get("runtime") == args.runtime]
     if not sources:
         raise RuntimeError("no sources matched target filter")
 
