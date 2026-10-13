@@ -2,14 +2,39 @@
 import { toast } from '../../../../shared/components'
 import { browserProxyCoreDownload, browserProxyCoreStatus } from '../../api'
 import type { ProxyCoreDownloadProgress, ProxyCoreStatusResult } from '../../types'
-import { EventsOff, EventsOn } from '../../../../wailsjs/runtime/runtime'
+import { Environment, EventsOff, EventsOn } from '../../../../wailsjs/runtime/runtime'
 
-function defaultProxyCoreTarget(): { goos: string; goarch: string } {
+interface ProxyCoreTarget {
+  goos: string
+  goarch: string
+}
+
+// navigator 推断只作兜底：macOS WebView 的 navigator.platform 恒为 MacIntel，Apple Silicon 会被误判成 amd64。
+function defaultProxyCoreTarget(): ProxyCoreTarget {
   const platform = navigator.platform.toLowerCase()
   const userAgent = navigator.userAgent.toLowerCase()
   const goos = platform.includes('mac') ? 'darwin' : platform.includes('linux') ? 'linux' : 'windows'
   const goarch = platform.includes('arm') || userAgent.includes('arm64') || userAgent.includes('aarch64') ? 'arm64' : 'amd64'
   return { goos, goarch }
+}
+
+let proxyCoreTargetPromise: Promise<ProxyCoreTarget> | null = null
+
+// resolveProxyCoreTarget 优先使用 Wails Environment 返回的真实平台（即后端 GOOS/GOARCH）。
+function resolveProxyCoreTarget(): Promise<ProxyCoreTarget> {
+  if (!proxyCoreTargetPromise) {
+    // 非 Wails 环境下 Environment 会同步抛错，放进 Promise 链里统一兜底。
+    proxyCoreTargetPromise = Promise.resolve()
+      .then(() => Environment())
+      .then(env => {
+        const fallback = defaultProxyCoreTarget()
+        const goos = ['darwin', 'linux', 'windows'].includes(env?.platform) ? env.platform : fallback.goos
+        const goarch = ['amd64', 'arm64'].includes(env?.arch) ? env.arch : fallback.goarch
+        return { goos, goarch }
+      })
+      .catch(() => defaultProxyCoreTarget())
+  }
+  return proxyCoreTargetPromise
 }
 
 export function useProxyCoreDownload() {
@@ -24,8 +49,20 @@ export function useProxyCoreDownload() {
   const [downloadCoreStatus, setDownloadCoreStatus] = useState<ProxyCoreStatusResult | null>(null)
   const [downloadCoreStatusLoading, setDownloadCoreStatusLoading] = useState(false)
 
+  useEffect(() => {
+    let cancelled = false
+    void resolveProxyCoreTarget().then(target => {
+      if (cancelled) return
+      setCoreDownloadGOOS(target.goos)
+      setCoreDownloadGOARCH(target.goarch)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const refreshCurrentCoreStatus = useCallback(async (core: string) => {
-    const target = defaultProxyCoreTarget()
+    const target = await resolveProxyCoreTarget()
     const status = await browserProxyCoreStatus(core || 'mihomo', target.goos, target.goarch)
     setCurrentCoreStatus(status)
     return status
@@ -87,8 +124,12 @@ export function useProxyCoreDownload() {
   const openCoreDownload = useCallback(() => {
     setCoreDownloadProgress(null)
     setCoreDownloadOpen(true)
-    void refreshDownloadCoreStatus()
-  }, [refreshDownloadCoreStatus])
+    void resolveProxyCoreTarget().then(target => {
+      setCoreDownloadGOOS(target.goos)
+      setCoreDownloadGOARCH(target.goarch)
+      return refreshDownloadCoreStatus(coreDownloadType, target.goos, target.goarch)
+    })
+  }, [coreDownloadType, refreshDownloadCoreStatus])
 
   const closeCoreDownload = useCallback(() => {
     setCoreDownloadOpen(false)
