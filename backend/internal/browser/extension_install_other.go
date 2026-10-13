@@ -18,6 +18,7 @@ func installCRXIntoProfile(userDataDir string, chromeBinaryPath string, packageP
 		"--no-default-browser-check",
 		"--install-extension=" + packagePath,
 	}
+	commandArgs = append(commandArgs, PlatformLaunchArgs()...)
 	commandArgs = append(commandArgs, installArgs...)
 	commandArgs = append(commandArgs, "about:blank")
 	command := exec.Command(chromeBinaryPath, commandArgs...)

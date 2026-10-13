@@ -25,6 +25,16 @@ func CoreExecutableCandidates() []string {
 	}
 }
 
+// PlatformLaunchArgs 返回当前平台启动内核时必须附加的参数。
+// macOS 上未正式签名的 Chromium 每次访问钥匙串 "Chromium Safe Storage" 都会弹授权框，
+// 使用 mock keychain 让内核改用固定密钥加密，不再访问系统钥匙串。
+func PlatformLaunchArgs() []string {
+	if goruntime.GOOS == "darwin" {
+		return []string{"--use-mock-keychain"}
+	}
+	return nil
+}
+
 func CoreExecutablePlatform() string {
 	return goruntime.GOOS + "/" + goruntime.GOARCH
 }

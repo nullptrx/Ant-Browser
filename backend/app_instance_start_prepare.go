@@ -351,6 +351,7 @@ func buildBrowserLaunchArgs(userDataDir string, debugPort int, effectiveProxy st
 		fmt.Sprintf("--remote-debugging-port=%d", debugPort),
 		"--disable-session-crashed-bubble",
 	}
+	args = append(args, browser.PlatformLaunchArgs()...)
 	if restoreLastSession {
 		args = append(args, "--restore-last-session")
 	}

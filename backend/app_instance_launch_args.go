@@ -161,6 +161,7 @@ func (a *App) openBrowserWindowForRunningProfile(profile *BrowserProfile, extraL
 	args := []string{
 		fmt.Sprintf("--user-data-dir=%s", userDataDir),
 	}
+	args = append(args, browser.PlatformLaunchArgs()...)
 	sanitizedExtraLaunchArgs, managedExtraArgs := sanitizeManagedLaunchArgs(extraLaunchArgs)
 	logManagedLaunchArgOverrides(logger.New("Browser"), profile.ProfileId, "running-window.extraLaunchArgs", managedExtraArgs)
 	args = append(args, sanitizedExtraLaunchArgs...)
