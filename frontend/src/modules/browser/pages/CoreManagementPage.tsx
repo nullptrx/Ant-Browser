@@ -301,7 +301,7 @@ export function CoreManagementPage() {
       setDownloadCatalog(catalog)
       const recommendation = catalog.recommendation
       if (!recommendation) {
-        setDownloadRecommendationError(`近期 Release 中没有 ${catalog.target.label} 可自动解压的压缩包`)
+        setDownloadRecommendationError(`近期 Release 中没有 ${catalog.target.label} 可自动解压的压缩包，可点击“打开 Releases”手动下载后填入地址，或在列表页使用“导入本地”`)
         return
       }
       setDownloadForm(prev => ({

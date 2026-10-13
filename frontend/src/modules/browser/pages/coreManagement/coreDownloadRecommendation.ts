@@ -25,6 +25,8 @@ export interface CoreDownloadRecommendation {
   namePlaceholder: string
   prerelease: boolean
   publishedAt: string
+  // emulated 表示上游没有当前架构的原生包，回退到需要系统仿真运行的 x64 包（Windows on ARM）。
+  emulated: boolean
 }
 
 export interface CoreDownloadCatalog {
@@ -110,11 +112,22 @@ function scoreAsset(asset: GitHubReleaseAsset, target: CoreDownloadTarget): numb
 
   let score = 0
   if (target.platform === 'windows') {
-    if (!name.includes('windows') || !matchesArch(name, target.arch)) return -1
-    score += 100
+    if (!name.includes('windows')) return -1
+    if (matchesArch(name, target.arch)) {
+      score += 100
+    } else if (target.arch === 'arm64' && matchesArch(name, 'amd64')) {
+      // 上游只发布 Windows x64 包，Windows 11 on ARM 可通过系统 x64 仿真运行，作为原生包缺失时的回退。
+      score += 50
+    } else {
+      return -1
+    }
     if (name.endsWith('.zip')) score += 20
   } else if (target.platform === 'linux') {
-    if (!name.includes('linux') || !matchesArch(name, target.arch)) return -1
+    if (!name.includes('linux')) return -1
+    // 上游早期 Linux 包文件名不带架构，且只构建 x64，按 amd64 处理。
+    const hasArchMarker = hasAny(name, ['amd64', 'x64', 'x86_64', 'arm64', 'aarch64'])
+    const archMatched = hasArchMarker ? matchesArch(name, target.arch) : target.arch === 'amd64'
+    if (!archMatched) return -1
     score += 100
     if (name.endsWith('.tar.xz')) score += 20
   } else if (target.platform === 'darwin') {
@@ -149,6 +162,7 @@ function toReleaseOption(release: GitHubReleaseResponse, target: CoreDownloadTar
     namePlaceholder: majorVersion ? `chrome-${majorVersion}` : 'chrome-latest',
     prerelease: Boolean(release.prerelease),
     publishedAt: (release.published_at || '').slice(0, 10),
+    emulated: target.platform === 'windows' && target.arch === 'arm64' && !matchesArch(asset.name.toLowerCase(), 'arm64'),
   }
 }
 

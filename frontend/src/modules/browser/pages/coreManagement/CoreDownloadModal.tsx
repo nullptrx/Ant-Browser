@@ -49,6 +49,7 @@ export function CoreDownloadModal({
         item.releaseTag || item.assetName,
         item === recommendation ? '（推荐）' : '',
         item.prerelease ? '（预发布）' : '',
+        item.emulated ? '（x64 仿真）' : '',
         item.publishedAt ? ` · ${item.publishedAt}` : '',
       ].join(''),
     })),
@@ -109,11 +110,11 @@ export function CoreDownloadModal({
             disabled={progress !== null || recommendationLoading}
           />
           <div className="text-xs text-[var(--color-text-muted)] mt-2 flex items-center justify-between gap-3 bg-[var(--color-bg-muted)] p-2 rounded">
-            <span className="min-w-0 truncate" title={selectedRelease?.assetName}>
+            <span className="min-w-0 break-all" title={selectedRelease?.assetName}>
               {recommendationLoading
                 ? '正在获取 Release 列表...'
                 : selectedRelease
-                  ? `${selectedRelease.target.label}：${selectedRelease.assetName}`
+                  ? `${selectedRelease.target.label}：${selectedRelease.assetName}${selectedRelease.emulated ? '（无 arm64 原生包，将以 x64 仿真运行）' : ''}`
                   : recommendationError || (catalog ? `已获取 ${releases.length} 个 ${catalog.target.label} 可用版本，也可直接填写地址` : '未获取到版本列表')}
             </span>
             {!recommendationLoading && (
