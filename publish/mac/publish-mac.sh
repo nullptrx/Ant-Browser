@@ -125,10 +125,12 @@ SINGBOX_SRC="$RUNTIME_DIR/sing-box"
 APP_BIN_DIR="$ROOT_DIR/build/bin"
 CHROME_README_SRC="$ROOT_DIR/chrome/README.md"
 CONFIG_INIT_SRC="$ROOT_DIR/publish/config.init.mac.yaml"
+APP_NAME="Ant Browser.app"
+# 版本和架构只体现在 zip 文件名中，.app 保持干净的显示名称
 ZIP_NAME="AntBrowser-${VERSION}-macos-${ARCH}.zip"
-APP_EXPORT="$OUTPUT_DIR/AntBrowser-${VERSION}-macos-${ARCH}.app"
+APP_EXPORT="$OUTPUT_DIR/$APP_NAME"
 STAGE_DIR="$STAGING_ROOT/$TARGET"
-APP_STAGE="$STAGE_DIR/Ant Browser.app"
+APP_STAGE="$STAGE_DIR/$APP_NAME"
 
 find_built_app_bundle() {
   python3 - "$APP_BIN_DIR" <<'PY'

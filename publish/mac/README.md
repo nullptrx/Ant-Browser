@@ -48,9 +48,11 @@ Available options:
 Output files:
 
 ```text
-publish/output/AntBrowser-<version>-macos-<arch>.app
+publish/output/Ant Browser.app
 publish/output/AntBrowser-<version>-macos-<arch>.zip
 ```
+
+The ZIP name carries the version and architecture; the bundle inside it is always `Ant Browser.app`.
 
 ## GitHub Actions
 
@@ -86,8 +88,8 @@ Configuration, database, logs, browser cores, and profile data belong in the use
 For a package downloaded or copied from another machine, macOS may apply quarantine metadata. For an internal test package only:
 
 ```bash
-xattr -dr com.apple.quarantine "AntBrowser-<version>-macos-<arch>.app"
-open "AntBrowser-<version>-macos-<arch>.app"
+xattr -dr com.apple.quarantine "Ant Browser.app"
+open "Ant Browser.app"
 ```
 
 Unsigned builds are for internal testing. Removing quarantine is not a substitute for signing or notarization.
