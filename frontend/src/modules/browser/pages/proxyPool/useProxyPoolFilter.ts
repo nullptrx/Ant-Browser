@@ -23,7 +23,7 @@ function getLatencySortTuple(latencyMap: Record<string, number>, proxyId: string
   if (latency === -1) return [1, Number.MAX_SAFE_INTEGER]
   if (latency === -2) return [2, Number.MAX_SAFE_INTEGER]
   if (latency === -3) return [3, Number.MAX_SAFE_INTEGER]
-  if (latency === -4) return [4, Number.MAX_SAFE_INTEGER]
+  if (latency === -4 || latency === -5) return [4, Number.MAX_SAFE_INTEGER]
   return [0, latency]
 }
 

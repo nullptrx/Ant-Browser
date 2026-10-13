@@ -136,6 +136,8 @@ export function writeGlobalRefreshConfig(enabled: boolean, intervalM: number) {
 export function toLatencyValue(ok: boolean, latencyMs: number, error?: string): number {
   if (ok) return latencyMs
   const message = (error || '').toLowerCase()
+  // 代理（或协议）与当前连接栈不匹配，属于配置问题而不是节点故障。
+  if (message.includes('连接栈')) return -5
   if (message.includes('不支持')) return -3
   if (message.includes('timeout') || message.includes('超时') || message.includes('deadline exceeded') || message.includes('i/o timeout')) return -2
   return -4

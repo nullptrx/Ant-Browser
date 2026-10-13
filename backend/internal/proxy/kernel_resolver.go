@@ -72,7 +72,7 @@ func ResolveProxyKernel(proxyConfig string, proxies []config.BrowserProxy, proxy
 	}
 	if preferred != ProxyKernelAuto {
 		if !containsKernel(resolution.SupportedKernels, preferred) {
-			return resolution, fmt.Errorf("协议 %s 不支持指定内核 %s", protocol, preferred)
+			return resolution, unsupportedPreferredKernelError(protocol, preferred, resolution.SupportedKernels)
 		}
 		resolution.Kernel = preferred
 		resolution.Reason = "使用代理指定内核"
@@ -181,9 +181,14 @@ func validatePreferredKernel(resolution ProxyKernelResolution, preferred string)
 		return nil
 	}
 	if !containsKernel(resolution.SupportedKernels, preferred) {
-		return fmt.Errorf("协议 %s 不支持指定内核 %s", resolution.Protocol, preferred)
+		return unsupportedPreferredKernelError(resolution.Protocol, preferred, resolution.SupportedKernels)
 	}
 	return nil
+}
+
+// unsupportedPreferredKernelError 说明协议可用的内核，引导改回“自动”（如 sing-box 只负责 hysteria2/tuic/anytls）。
+func unsupportedPreferredKernelError(protocol string, preferred string, supported []string) error {
+	return fmt.Errorf("协议 %s 不支持指定内核 %s（可用：%s），请将代理内核改为“自动”", protocol, preferred, strings.Join(supported, "、"))
 }
 
 func containsKernel(kernels []string, kernel string) bool {

@@ -126,6 +126,7 @@ export function ProxyPoolTableCard({
     if (value === -2) return <span className="text-red-500 text-xs" title={error || '测速超时'}>超时</span>
     if (value === -3) return <span className="text-gray-400 text-xs" title={error || '协议不支持'}>不支持</span>
     if (value === -4) return <span className="text-red-500 text-xs" title={error || '测速失败'}>失败</span>
+    if (value === -5) return <span className="text-gray-400 text-xs whitespace-nowrap" title={error || '代理与当前连接栈不匹配'}>栈不匹配</span>
     const color = value < 200 ? 'text-green-500' : value < 500 ? 'text-yellow-500' : 'text-red-500'
     return <span className={`text-xs font-medium ${color}`}>{value} ms</span>
   }
