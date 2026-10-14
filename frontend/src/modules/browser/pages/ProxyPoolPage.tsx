@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { ConfirmModal, toast } from '../../../shared/components'
 import type { SortOrder } from '../../../shared/components/Table'
 import type { BrowserProxy, ProxyIPHealthResult } from '../types'
-import { fetchBrowserProxies, fetchBrowserProxyGroups, saveBrowserProxies } from '../api'
+import { fetchBrowserProxies, fetchBrowserProxyGroups, fetchBrowserSettings, saveBrowserProxies, saveBrowserSettings } from '../api'
+import { connectorForKernel, connectorStackName, isKernelAllowedForConnector } from './proxyPool/kernelOptions'
+import { syncProxyCheckCacheConnector } from './proxyPool/storage'
 import {
   buildChainImportCandidate,
   buildDirectImportCandidate,
@@ -43,6 +45,17 @@ export function ProxyPoolPage() {
   const [displayList, setDisplayList] = useState<ProxyDisplayInfo[]>([])
   const [loading, setLoading] = useState(true)
   const [usageGuideOpen, setUsageGuideOpen] = useState(false)
+  // 当前连接栈：编辑代理时只提供该栈可用的代理内核。
+  const [connectorType, setConnectorType] = useState('mihomo')
+  const [stackSwitch, setStackSwitch] = useState<{ proxies: BrowserProxy[]; targetConnector: string; conflicts: number } | null>(null)
+  const refreshConnectorType = useCallback(async () => {
+    try {
+      const settings = await fetchBrowserSettings()
+      setConnectorType(settings.defaultConnectorType === 'xray' ? 'xray' : 'mihomo')
+    } catch {
+      // 读取失败时保留上次的值
+    }
+  }, [])
   const {
     coreDownloadOpen,
     coreDownloadType,
@@ -212,7 +225,8 @@ export function ProxyPoolPage() {
   useEffect(() => {
     void loadProxies()
     void loadBrowserSettings()
-  }, [loadProxies, loadBrowserSettings])
+    void refreshConnectorType()
+  }, [loadProxies, loadBrowserSettings, refreshConnectorType])
 
   const { protocolOptions, filteredList } = useProxyPoolFilter({
     displayList,
@@ -252,6 +266,7 @@ export function ProxyPoolPage() {
   const handleEdit = (record: ProxyDisplayInfo) => {
     const proxy = proxies.find(p => p.proxyId === record.proxyId)
     if (proxy) {
+      void refreshConnectorType()
       setEditingProxy(proxy)
       setEditForm({
         proxyName: proxy.proxyName,
@@ -310,23 +325,46 @@ export function ProxyPoolPage() {
       return
     }
 
+    const newProxies = proxies.map(p =>
+      p.proxyId === editingProxy.proxyId
+        ? {
+          ...p,
+          proxyName: nextProxyName,
+          proxyConfig: nextProxyConfig,
+          preferredKernel: editForm.preferredKernel === 'auto' ? undefined : editForm.preferredKernel,
+          dnsServers: editForm.dnsServers.trim() || undefined,
+          groupName: editForm.groupName.trim() || undefined,
+        }
+        : p
+    )
+    // 选了另一栈的内核：先确认，再连同全局连接栈一起切换（全局只有一套栈，不混用）。
+    if (!isKernelAllowedForConnector(editForm.preferredKernel, connectorType)) {
+      const targetConnector = connectorForKernel(editForm.preferredKernel)
+      const conflicts = newProxies.filter(p =>
+        p.proxyId !== editingProxy.proxyId && !isKernelAllowedForConnector(p.preferredKernel || '', targetConnector),
+      ).length
+      setStackSwitch({ proxies: newProxies, targetConnector, conflicts })
+      return
+    }
+    await commitProxyEdit(newProxies, '')
+  }
+
+  const commitProxyEdit = async (newProxies: BrowserProxy[], targetConnector: string) => {
     setSaving(true)
     try {
-      const newProxies = proxies.map(p =>
-        p.proxyId === editingProxy.proxyId
-          ? {
-            ...p,
-            proxyName: nextProxyName,
-            proxyConfig: nextProxyConfig,
-            preferredKernel: editForm.preferredKernel === 'auto' ? undefined : editForm.preferredKernel,
-            dnsServers: editForm.dnsServers.trim() || undefined,
-            groupName: editForm.groupName.trim() || undefined,
-          }
-          : p
-      )
       await saveProxies(newProxies)
+      if (targetConnector) {
+        const settings = await fetchBrowserSettings()
+        await saveBrowserSettings({ ...settings, defaultConnectorType: targetConnector })
+        // 旧栈的测速 / IP 健康结果不再可信，内存与缓存一并清空。
+        syncProxyCheckCacheConnector(targetConnector)
+        setLatencyMap({})
+        setLatencyEngineMap({})
+        setIPHealthMap({})
+        setConnectorType(targetConnector)
+      }
       setEditModalOpen(false)
-      toast.success('代理已更新')
+      toast.success(targetConnector ? `代理已更新，连接栈已切换为 ${connectorStackName(targetConnector)}` : '代理已更新')
     } catch (error: any) {
       toast.error(error?.message || '保存失败')
     } finally {
@@ -473,6 +511,7 @@ export function ProxyPoolPage() {
       <ProxyPoolEditModal
         open={editModalOpen}
         saving={saving}
+        connectorType={connectorType}
         groups={groups}
         editForm={editForm}
         chainEditMode={chainEditMode}
@@ -519,6 +558,21 @@ export function ProxyPoolPage() {
         onDownloadProxyChange={setCoreDownloadProxy}
         onClose={closeCoreDownload}
         onStart={handleStartCoreDownload}
+      />
+
+      <ConfirmModal
+        open={stackSwitch !== null}
+        onClose={() => setStackSwitch(null)}
+        onConfirm={() => {
+          if (stackSwitch) void commitProxyEdit(stackSwitch.proxies, stackSwitch.targetConnector)
+        }}
+        title="切换连接栈"
+        content={stackSwitch ? [
+          `该内核属于 ${connectorStackName(stackSwitch.targetConnector)} 连接栈，将把全局连接栈从 ${connectorStackName(connectorType)} 切换为 ${connectorStackName(stackSwitch.targetConnector)}。`,
+          stackSwitch.conflicts > 0 ? `另有 ${stackSwitch.conflicts} 个代理指定了其他栈的内核，切换后会显示“栈不匹配”。` : '',
+          '运行中的实例需重启后生效，代理需重新测速。',
+        ].filter(Boolean).join('') : ''}
+        confirmText="切换并保存"
       />
 
       <ConfirmModal open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)} onConfirm={handleDeleteConfirm}

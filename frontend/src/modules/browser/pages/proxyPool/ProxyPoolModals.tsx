@@ -8,6 +8,7 @@ import {
   type ProxyDisplayInfo,
   type ProxyImportMode,
 } from './helpers'
+import { connectorForKernel, connectorStackName, isKernelAllowedForConnector, preferredKernelOptions } from './kernelOptions'
 
 export interface ProxyEditFormValue {
   proxyName: string
@@ -96,6 +97,7 @@ export function ProxyPoolPreviewModal({
 interface ProxyPoolEditModalProps {
   open: boolean
   saving: boolean
+  connectorType: string
   groups: string[]
   editForm: ProxyEditFormValue
   chainEditMode: boolean
@@ -113,6 +115,7 @@ interface ProxyPoolEditModalProps {
 export function ProxyPoolEditModal({
   open,
   saving,
+  connectorType,
   groups,
   editForm,
   chainEditMode,
@@ -174,16 +177,16 @@ export function ProxyPoolEditModal({
             ))}
           </datalist>
         </FormItem>
-        <FormItem label="代理内核">
+        <FormItem
+          label="代理内核"
+          hint={isKernelAllowedForConnector(editForm.preferredKernel, connectorType)
+            ? `当前连接栈：${connectorStackName(connectorType)}`
+            : `保存时将把全局连接栈切换为 ${connectorStackName(connectorForKernel(editForm.preferredKernel))}（影响所有代理）`}
+        >
           <Select
             value={editForm.preferredKernel || 'auto'}
             onChange={(event) => onChange({ preferredKernel: event.target.value })}
-            options={[
-              { value: 'auto', label: '自动' },
-              { value: 'xray', label: 'Xray' },
-              { value: 'sing-box', label: 'sing-box' },
-              { value: 'mihomo', label: 'Mihomo' },
-            ]}
+            options={preferredKernelOptions()}
           />
         </FormItem>
         {chainEditMode ? (
