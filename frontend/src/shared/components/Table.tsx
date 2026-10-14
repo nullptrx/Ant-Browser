@@ -27,6 +27,8 @@ interface TableProps<T> {
   onRowClick?: (record: T) => void
   className?: string
   tableMinWidth?: string | number
+  // 固定列宽：列宽只由 width 决定，不随单元格内容变化（适合测速等内容频繁变化的表格，避免整表跳动）。
+  fixedLayout?: boolean
   maxHeight?: string  // 表格最大高度，默认 'calc(100vh - 320px)'
   stickyHeader?: boolean  // 是否固定表头，默认 true
   onSort?: (sorterResult: SorterResult) => void // 排序变化回调
@@ -43,6 +45,7 @@ export function Table<T extends Record<string, any>>({
   onRowClick,
   className,
   tableMinWidth,
+  fixedLayout = false,
   maxHeight = 'calc(100vh - 320px)',
   stickyHeader = true,
   onSort,
@@ -109,7 +112,7 @@ export function Table<T extends Record<string, any>>({
       )}
       style={{ maxHeight }}
     >
-      <table className="min-w-full" style={{ minWidth: tableMinWidth }}>
+      <table className={clsx('min-w-full', fixedLayout && 'table-fixed')} style={{ minWidth: tableMinWidth }}>
         <thead className={clsx(stickyHeader && maxHeight !== 'none' && 'sticky top-0 z-10')}>
           <tr>
             {columns.map((col) => (
@@ -162,6 +165,8 @@ export function Table<T extends Record<string, any>>({
                     key={col.key}
                     className={clsx(
                       'px-4 py-3.5 text-sm text-[var(--color-text-secondary)]',
+                      // 不加 overflow-hidden：单元格内的下拉菜单需要溢出显示；长文本在列宽内换行。
+                      fixedLayout && '[overflow-wrap:anywhere]',
                       col.align === 'center' && 'text-center',
                       col.align === 'right' && 'text-right'
                     )}

@@ -445,6 +445,8 @@ export function ProxyPoolTableCard({
         rowKey="proxyId"
         loading={loading}
         emptyText="暂无代理配置，点击上方按钮添加或导入"
+        fixedLayout
+        tableMinWidth="1500px"
         sortColumn={sortColumn}
         sortOrder={sortOrder}
         onSort={onSort}
