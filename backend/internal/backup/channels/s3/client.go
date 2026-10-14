@@ -2,6 +2,7 @@ package s3
 
 import (
 	"ant-chrome/backend/internal/backup/channels"
+	"ant-chrome/backend/internal/upstream"
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
@@ -113,11 +114,7 @@ func NewClient(configValue Config) (*Client, error) {
 }
 
 func newHTTPClient() *http.Client {
-	transport, ok := http.DefaultTransport.(*http.Transport)
-	if !ok {
-		return &http.Client{Timeout: TransferTimeout}
-	}
-	transport = transport.Clone()
+	transport := upstream.NewTransport()
 	transport.ResponseHeaderTimeout = ControlTimeout
 	return &http.Client{
 		Transport: transport,

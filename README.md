@@ -182,6 +182,7 @@ Ant Browser 适合以下场景：
 - `xray` 表示 Xray + sing-box 组合栈：Xray 负责 vmess/vless/trojan/shadowsocks/链式代理等，sing-box 负责 hysteria2/tuic/anytls 等协议。
 - `mihomo` 表示独立 Mihomo 栈：需要桥接的代理统一走 mihomo。
 - 实例启动、代理测速、真实连通性、IP 健康、预热和插件下载代理必须按当前连接栈执行；不得在 `xray` 组合栈和 `mihomo` 栈之间自动混用。
+- 前置代理（`upstream_proxy`，在「系统设置 → 前置代理」配置）：仅支持 `http://` 与 `socks5://`（可带账号密码）。启用后浏览器实例、Xray / sing-box / Mihomo 连接节点（分别通过 `dialerProxy` / `detour` / `dialer-proxy`）以及下载、测速、订阅刷新等应用请求都经过它；直连实例改为桥接到前置代理，连接失败不会回退直连。HTTP 前置代理无法承载 hysteria2 / tuic 等 UDP 协议，需改用 SOCKS5。
 - 详细约束见 [VPN / 代理协议审计报告](docs/audits/vpn-protocol-audit-report.md)。
 
 ### 3. 代理生效验证

@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"ant-chrome/backend/internal/upstream"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -85,7 +86,7 @@ func (a *App) AutomationScriptInvokePublicAPI(input AutomationScriptPublicAPIInv
 		req.Header.Set(authHeader, apiKey)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := upstream.HTTPClient(0).Do(req)
 	if err != nil {
 		if ctxErr := ctx.Err(); ctxErr != nil {
 			return nil, fmt.Errorf("invoke public api failed: %w", ctxErr)

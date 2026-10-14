@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"ant-chrome/backend/internal/upstream"
 	"context"
 	"encoding/json"
 	"errors"
@@ -50,7 +51,7 @@ func (a *App) FetchRemoteAuthorProfile(rawURL string, timeoutMs int) (map[string
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("User-Agent", "AntBrowser/1.0 profile-fetch")
 
-	client := &http.Client{}
+	client := upstream.HTTPClient(0)
 	resp, err := client.Do(req)
 	if err != nil {
 		log := logger.New("ProfileConfig")

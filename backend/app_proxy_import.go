@@ -3,6 +3,7 @@ package backend
 import (
 	"ant-chrome/backend/internal/config"
 	"ant-chrome/backend/internal/proxy"
+	"ant-chrome/backend/internal/upstream"
 	"context"
 	"encoding/base64"
 	"errors"
@@ -55,7 +56,7 @@ func (a *App) browserProxyFetchClashByURL(rawURL string, proxyID string) (map[st
 		return nil, fmt.Errorf("仅支持 http/https URL")
 	}
 
-	client := &http.Client{Timeout: clashSubscriptionTimeout}
+	client := upstream.HTTPClient(clashSubscriptionTimeout)
 	if proxyID != "" {
 		proxyClient, err := a.clashSubscriptionProxyClient(proxyID)
 		if err != nil {

@@ -1,6 +1,7 @@
 package automation
 
 import (
+	"ant-chrome/backend/internal/upstream"
 	"fmt"
 	"net/http"
 	"os/exec"
@@ -106,7 +107,7 @@ func NewManager(appRoot string, cfg *config.Config, emit func(string, any), opts
 		opts.HTTPClient = &http.Client{
 			Timeout: 0,
 			Transport: &http.Transport{
-				Proxy: http.ProxyFromEnvironment,
+				Proxy: upstream.ProxyFunc(http.ProxyFromEnvironment),
 			},
 		}
 	}

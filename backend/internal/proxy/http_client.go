@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"ant-chrome/backend/internal/upstream"
 	"context"
 	"fmt"
 	"net/http"
@@ -88,7 +89,8 @@ func buildProxyHTTPClientContext(
 				pass, _ := u.User.Password()
 				auth = &xproxy.Auth{User: u.User.Username(), Password: pass}
 			}
-			dialer, err := xproxy.SOCKS5("tcp", u.Host, auth, xproxy.Direct)
+			// 连接 SOCKS5 服务器本身也要经过前置代理（未启用时直连）。
+			dialer, err := xproxy.SOCKS5("tcp", u.Host, auth, upstream.Dialer{})
 			if err != nil {
 				return nil, fmt.Errorf("SOCKS5 dialer 创建失败: %w", err)
 			}
@@ -103,9 +105,10 @@ func buildProxyHTTPClientContext(
 			if err != nil {
 				return nil, fmt.Errorf("代理地址解析失败: %w", err)
 			}
-			return &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL)}, Timeout: timeout}, nil
+			return &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL), DialContext: upstream.Dialer{}.DialContext}, Timeout: timeout}, nil
 		}
-		return &http.Client{Timeout: timeout}, nil
+		// 直连：启用前置代理时经前置代理，否则沿用环境变量代理（与原先默认 Transport 一致）。
+		return &http.Client{Timeout: timeout, Transport: upstream.NewTransport()}, nil
 	}
 
 	switch resolution.Kernel {

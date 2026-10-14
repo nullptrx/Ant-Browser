@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"ant-chrome/backend/internal/upstream"
 	"fmt"
 	"os"
 	"os/exec"
@@ -55,8 +56,30 @@ func cloneAutomationGitRepository(repoURL string, ref string) (string, func(), e
 	return tempDir, cleanup, nil
 }
 
+// gitUpstreamArgs 启用前置代理时让 git 的 HTTP(S) 传输经前置代理；SSH 地址无法经前置代理，直接拒绝。
+func gitUpstreamArgs(args []string) ([]string, error) {
+	if err := upstream.ConfigError(); err != nil {
+		return nil, err
+	}
+	p := upstream.Current()
+	if p == nil {
+		return args, nil
+	}
+	if len(args) > 1 && args[0] == "clone" {
+		repo := strings.ToLower(strings.TrimSpace(args[1]))
+		if !strings.HasPrefix(repo, "https://") && !strings.HasPrefix(repo, "http://") {
+			return nil, fmt.Errorf("已启用前置代理，Git 仓库仅支持 https:// 地址（SSH 地址无法经前置代理）")
+		}
+	}
+	return append([]string{"-c", "http.proxy=" + p.ToolURL()}, args...), nil
+}
+
 func runGitCommand(workdir string, args ...string) error {
-	cmd := exec.Command("git", args...)
+	gitArgs, err := gitUpstreamArgs(args)
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command("git", gitArgs...)
 	if strings.TrimSpace(workdir) != "" {
 		cmd.Dir = workdir
 	}

@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"ant-chrome/backend/internal/fsutil"
+	"ant-chrome/backend/internal/upstream"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -15,8 +16,9 @@ import (
 	"time"
 )
 
+// computeNodeKey 计算桥接复用 key；前置代理参与计算，切换前置代理后会建立新的桥接。
 func computeNodeKey(src string) string {
-	h := sha256.Sum256([]byte(strings.TrimSpace(src)))
+	h := sha256.Sum256([]byte(strings.TrimSpace(src) + upstream.KeySuffix()))
 	return hex.EncodeToString(h[:])
 }
 

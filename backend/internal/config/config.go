@@ -49,15 +49,23 @@ type AutomationConfig struct {
 
 // Config 应用配置
 type Config struct {
-	Database     DatabaseConfig     `yaml:"database"`
-	App          AppConfig          `yaml:"app"`
-	Runtime      RuntimeConfig      `yaml:"runtime"`
-	Logging      LoggingConfig      `yaml:"logging"`
-	Browser      BrowserConfig      `yaml:"browser"`
-	ProxyCheck   ProxyCheckConfig   `yaml:"proxy_check"`
-	LaunchServer LaunchServerConfig `yaml:"launch_server"`
-	Automation   AutomationConfig   `yaml:"automation"`
-	Backup       BackupConfig       `yaml:"backup"`
+	Database   DatabaseConfig   `yaml:"database"`
+	App        AppConfig        `yaml:"app"`
+	Runtime    RuntimeConfig    `yaml:"runtime"`
+	Logging    LoggingConfig    `yaml:"logging"`
+	Browser    BrowserConfig    `yaml:"browser"`
+	ProxyCheck ProxyCheckConfig `yaml:"proxy_check"`
+	// UpstreamProxy 全局前置代理：启用后浏览器实例、代理内核以及应用自身的所有出站连接都经过它。
+	UpstreamProxy UpstreamProxyConfig `yaml:"upstream_proxy"`
+	LaunchServer  LaunchServerConfig  `yaml:"launch_server"`
+	Automation    AutomationConfig    `yaml:"automation"`
+	Backup        BackupConfig        `yaml:"backup"`
+}
+
+// UpstreamProxyConfig 前置代理，仅支持 http:// 与 socks5://（可带账号密码）。
+type UpstreamProxyConfig struct {
+	Enabled bool   `yaml:"enabled" json:"enabled"`
+	URL     string `yaml:"url" json:"url"`
 }
 
 type ProxyCheckConfig struct {

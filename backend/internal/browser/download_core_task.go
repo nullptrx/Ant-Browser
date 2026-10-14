@@ -1,6 +1,7 @@
 package browser
 
 import (
+	"ant-chrome/backend/internal/upstream"
 	"context"
 	"fmt"
 	"net/http"
@@ -132,6 +133,11 @@ func (m *Manager) downloadAndExtractCore(ctx context.Context, coreInput CoreInpu
 			}
 		}
 
+		// 启用前置代理时一律经前置代理下载，未启用时沿用上面的系统代理 / 指定代理设置。
+		transport.Proxy = upstream.ProxyFunc(transport.Proxy)
+		if upstream.Current() != nil {
+			sendEvent("downloading", 0, "已启用前置代理，下载经前置代理进行")
+		}
 		client = &http.Client{
 			Timeout:   0,
 			Transport: transport,

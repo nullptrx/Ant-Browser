@@ -1285,6 +1285,36 @@ export namespace backend {
 	        this.filePath = source["filePath"];
 	    }
 	}
+	export class UpstreamProxySettings {
+	    enabled: boolean;
+	    url: string;
+
+	    static createFrom(source: any = {}) {
+	        return new UpstreamProxySettings(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.enabled = source["enabled"];
+	        this.url = source["url"];
+	    }
+	}
+	export class UpstreamProxyTestResult {
+	    ok: boolean;
+	    latencyMs: number;
+	    error: string;
+
+	    static createFrom(source: any = {}) {
+	        return new UpstreamProxyTestResult(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ok = source["ok"];
+	        this.latencyMs = source["latencyMs"];
+	        this.error = source["error"];
+	    }
+	}
 
 }
 
@@ -1810,6 +1840,7 @@ export namespace config {
 	    name: string;
 	    url: string;
 	    openOnStart: boolean;
+	    disabled: boolean;
 
 	    static createFrom(source: any = {}) {
 	        return new BrowserBookmark(source);
@@ -1820,6 +1851,7 @@ export namespace config {
 	        this.name = source["name"];
 	        this.url = source["url"];
 	        this.openOnStart = source["openOnStart"];
+	        this.disabled = source["disabled"];
 	    }
 	}
 	export class BrowserCore {
@@ -2125,3 +2157,4 @@ export namespace proxy {
 	}
 
 }
+

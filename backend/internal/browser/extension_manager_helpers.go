@@ -1,6 +1,7 @@
 package browser
 
 import (
+	"ant-chrome/backend/internal/upstream"
 	"archive/zip"
 	"bytes"
 	"context"
@@ -36,7 +37,7 @@ func extractExtensionIDFromURL(rawURL string) string {
 
 func downloadChromeExtensionCRX(ctx context.Context, extensionID string, client *http.Client) ([]byte, error) {
 	if client == nil {
-		client = &http.Client{Timeout: extensionDownloadTimeout}
+		client = upstream.HTTPClient(extensionDownloadTimeout)
 	}
 	downloadURL := BuildChromeExtensionDownloadURL(extensionID)
 	var lastErr error

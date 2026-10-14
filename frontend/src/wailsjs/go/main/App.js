@@ -266,6 +266,10 @@ export function BrowserCoreRedownload(arg1, arg2, arg3) {
   return window['go']['main']['App']['BrowserCoreRedownload'](arg1, arg2, arg3);
 }
 
+export function BrowserCoreReleaseList() {
+  return window['go']['main']['App']['BrowserCoreReleaseList']();
+}
+
 export function BrowserCoreSave(arg1) {
   return window['go']['main']['App']['BrowserCoreSave'](arg1);
 }
@@ -666,6 +670,10 @@ export function GetRunningInstances() {
   return window['go']['main']['App']['GetRunningInstances']();
 }
 
+export function GetUpstreamProxySettings() {
+  return window['go']['main']['App']['GetUpstreamProxySettings']();
+}
+
 export function InstallAutomationRuntime() {
   return window['go']['main']['App']['InstallAutomationRuntime']();
 }
@@ -738,6 +746,10 @@ export function SaveProxyCheckSettings(arg1) {
   return window['go']['main']['App']['SaveProxyCheckSettings'](arg1);
 }
 
+export function SaveUpstreamProxySettings(arg1) {
+  return window['go']['main']['App']['SaveUpstreamProxySettings'](arg1);
+}
+
 export function SetLogLevel(arg1) {
   return window['go']['main']['App']['SetLogLevel'](arg1);
 }
@@ -764,6 +776,10 @@ export function TestProxyConnectivity(arg1, arg2) {
 
 export function TestProxyRealConnectivity(arg1) {
   return window['go']['main']['App']['TestProxyRealConnectivity'](arg1);
+}
+
+export function TestUpstreamProxy(arg1) {
+  return window['go']['main']['App']['TestUpstreamProxy'](arg1);
 }
 
 export function TriggerGC() {

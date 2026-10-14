@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"ant-chrome/backend/internal/upstream"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -61,11 +62,12 @@ func parseDirectProxyBridgeSpec(src string) (*directProxyBridgeSpec, error) {
 	scheme := strings.ToLower(strings.TrimSpace(parsed.Scheme))
 	switch scheme {
 	case "socks5", "http", "https":
-		if parsed.User == nil {
-			return nil, nil
+		// 无鉴权代理浏览器可直连；但启用前置代理后也必须经本地桥接，才能让连接走前置代理。
+		username := ""
+		if parsed.User != nil {
+			username = strings.TrimSpace(parsed.User.Username())
 		}
-		username := strings.TrimSpace(parsed.User.Username())
-		if username == "" {
+		if username == "" && upstream.Current() == nil {
 			return nil, nil
 		}
 		server := strings.TrimSpace(parsed.Hostname())
@@ -76,7 +78,10 @@ func parseDirectProxyBridgeSpec(src string) (*directProxyBridgeSpec, error) {
 		if err != nil || port < 1 || port > 65535 {
 			return nil, fmt.Errorf("代理端口无效")
 		}
-		password, _ := parsed.User.Password()
+		password := ""
+		if parsed.User != nil {
+			password, _ = parsed.User.Password()
+		}
 		return &directProxyBridgeSpec{
 			Scheme:   scheme,
 			Server:   server,

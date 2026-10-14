@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"ant-chrome/backend/internal/upstream"
 	"context"
 	"fmt"
 	"io"
@@ -65,7 +66,7 @@ func (a *App) loadAutomationRemoteBundle(rawURL string) (automation.ImportedBund
 		return automation.ImportedBundle{}, fmt.Errorf("创建远程脚本请求失败: %w", err)
 	}
 
-	resp, err := (&http.Client{Timeout: automationRemoteImportTimeout}).Do(req)
+	resp, err := upstream.HTTPClient(automationRemoteImportTimeout).Do(req)
 	if err != nil {
 		return automation.ImportedBundle{}, fmt.Errorf("下载远程脚本失败: %w", err)
 	}

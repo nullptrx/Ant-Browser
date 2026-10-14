@@ -4,6 +4,7 @@ import (
 	"ant-chrome/backend/internal/config"
 	"ant-chrome/backend/internal/logger"
 	"ant-chrome/backend/internal/proxy"
+	"ant-chrome/backend/internal/upstream"
 	"fmt"
 	"strings"
 )
@@ -15,12 +16,17 @@ func (a *App) resolveBrowserStartProxy(input browserStartInput, profile *Browser
 	proxies := a.getLatestProxies()
 	profileID := input.ProfileID
 
-	if input.ForceDirectProxy {
+	if input.ForceDirectProxy && upstream.Current() == nil {
 		log.Warn("按请求直连启动实例",
 			logger.F("profile_id", profileID),
 			logger.F("proxy_id", profile.ProxyId),
 		)
 		return "direct://", profileProxyBridgeRef{}, false, nil
+	}
+	if err := upstream.ConfigError(); err != nil {
+		startErr := fmt.Errorf("实例启动失败：%s", err.Error())
+		profile.LastError = startErr.Error()
+		return "", profileProxyBridgeRef{}, false, startErr
 	}
 
 	resolvedProxyID := strings.TrimSpace(profile.ProxyId)
@@ -48,6 +54,15 @@ func (a *App) resolveBrowserStartProxy(input browserStartInput, profile *Browser
 				break
 			}
 		}
+	}
+
+	if input.ForceDirectProxy {
+		resolvedProxyID, resolvedProxyConfig = "", "direct://"
+	}
+	// 启用前置代理时，直连 / 未配置代理的实例改为桥接到前置代理本身，保证所有流量都经过它。
+	if replaced := proxy.UpstreamDirectReplacement(resolvedProxyConfig); replaced != resolvedProxyConfig {
+		log.Info("直连改走前置代理", logger.F("profile_id", profileID))
+		resolvedProxyID, resolvedProxyConfig = "", replaced
 	}
 
 	log.Info("代理配置检查",

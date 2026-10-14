@@ -9,6 +9,7 @@ import (
 	"ant-chrome/backend/internal/launchcode"
 	"ant-chrome/backend/internal/logger"
 	"ant-chrome/backend/internal/proxy"
+	"ant-chrome/backend/internal/upstream"
 	"context"
 	"fmt"
 	"net/http"
@@ -28,6 +29,13 @@ func (a *App) startup(ctx context.Context) {
 
 	cfg := a.startupLoadConfig()
 	a.config = cfg
+	// 前置代理每次按当前配置读取，ReloadConfig / 恢复备份等整体替换配置后也会立即生效。
+	upstream.SetSource(func() (bool, string) {
+		if a.config == nil {
+			return false, ""
+		}
+		return a.config.UpstreamProxy.Enabled, a.config.UpstreamProxy.URL
+	})
 	a.applyRuntimeConfig(cfg.Runtime)
 
 	log := a.startupInitLogger(ctx, cfg)

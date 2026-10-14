@@ -167,12 +167,12 @@ function toReleaseOption(release: GitHubReleaseResponse, target: CoreDownloadTar
   }
 }
 
-// fetchCoreDownloadCatalog 拉取最近的 Release 列表，每个版本只保留当前环境可自动解压的压缩包。
-export async function fetchCoreDownloadCatalog(
-  env: CoreDownloadRuntimeEnvironment | null | undefined,
-  signal?: AbortSignal,
-): Promise<CoreDownloadCatalog> {
-  const target = resolveCoreDownloadTarget(env)
+// fetchReleaseListJSON 优先由后端拉取（遵循前置代理），非 Wails 环境才由 WebView 直接请求。
+async function fetchReleaseListJSON(signal?: AbortSignal): Promise<GitHubReleaseResponse[]> {
+  const bindings: any = await import('../../../../wailsjs/go/main/App').catch(() => null)
+  if (bindings?.BrowserCoreReleaseList && (globalThis as any).go?.main?.App) {
+    return JSON.parse(await bindings.BrowserCoreReleaseList()) as GitHubReleaseResponse[]
+  }
   const response = await fetch(FINGERPRINT_CHROMIUM_RELEASE_LIST_API_URL, {
     headers: { Accept: 'application/vnd.github+json' },
     signal,
@@ -180,7 +180,16 @@ export async function fetchCoreDownloadCatalog(
   if (!response.ok) {
     throw new Error(`GitHub Releases 请求失败: ${response.status}`)
   }
-  const list = await response.json() as GitHubReleaseResponse[]
+  return await response.json() as GitHubReleaseResponse[]
+}
+
+// fetchCoreDownloadCatalog 拉取最近的 Release 列表，每个版本只保留当前环境可自动解压的压缩包。
+export async function fetchCoreDownloadCatalog(
+  env: CoreDownloadRuntimeEnvironment | null | undefined,
+  signal?: AbortSignal,
+): Promise<CoreDownloadCatalog> {
+  const target = resolveCoreDownloadTarget(env)
+  const list = await fetchReleaseListJSON(signal)
   const releases = (Array.isArray(list) ? list : [])
     .map(release => toReleaseOption(release, target))
     .filter((item): item is CoreDownloadRecommendation => item !== null)

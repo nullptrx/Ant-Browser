@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"ant-chrome/backend/internal/upstream"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -42,14 +43,15 @@ func proxyCoreHTTPClient(timeout time.Duration, proxyConfig string) (*http.Clien
 	scheme := strings.ToLower(u.Scheme)
 	switch scheme {
 	case "http", "https":
-		return &http.Client{Timeout: timeout, Transport: &http.Transport{Proxy: http.ProxyURL(u)}}, "指定代理", nil
+		// 连接下载代理本身也经过前置代理（未启用时直连）。
+		return &http.Client{Timeout: timeout, Transport: &http.Transport{Proxy: http.ProxyURL(u), DialContext: upstream.Dialer{Timeout: 30 * time.Second}.DialContext}}, "指定代理", nil
 	case "socks5":
 		var auth *xproxy.Auth
 		if u.User != nil {
 			password, _ := u.User.Password()
 			auth = &xproxy.Auth{User: u.User.Username(), Password: password}
 		}
-		dialer, err := xproxy.SOCKS5("tcp", u.Host, auth, xproxy.Direct)
+		dialer, err := xproxy.SOCKS5("tcp", u.Host, auth, upstream.Dialer{Timeout: 30 * time.Second})
 		if err != nil {
 			return nil, "", fmt.Errorf("SOCKS5 dialer 创建失败: %w", err)
 		}
@@ -66,6 +68,8 @@ func proxyCoreHTTPClient(timeout time.Duration, proxyConfig string) (*http.Clien
 func proxyCoreDirectTransport() *http.Transport {
 	dialer := &net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}
 	return &http.Transport{
+		// 启用前置代理时直连下载改经前置代理（DialContext 负责连到前置代理），未启用时仍直连。
+		Proxy: upstream.ProxyFunc(nil),
 		DialContext: func(ctx context.Context, network string, address string) (net.Conn, error) {
 			host, port, err := net.SplitHostPort(address)
 			if err == nil && port == "443" && isLocalhostHost(host) {

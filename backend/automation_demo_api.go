@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"ant-chrome/backend/internal/upstream"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -160,7 +161,7 @@ func (a *App) automationDemoRequestWithContext(ctx context.Context, method strin
 		req.Header.Set(authHeader, authValue)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := upstream.HTTPClient(0).Do(req)
 	if err != nil {
 		if ctxErr := reqCtx.Err(); ctxErr != nil {
 			return 0, nil, fmt.Errorf("call launch api failed: %w", ctxErr)

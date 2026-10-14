@@ -396,6 +396,10 @@ func (m *ClashManager) buildMihomoNodeConfig(key string, node map[string]interfa
 		name = "node"
 		node["name"] = name
 	}
+	upstreamProxies, err := applyMihomoUpstream(node)
+	if err != nil {
+		return "", err
+	}
 	payload := map[string]interface{}{
 		"mixed-port":          port,
 		"external-controller": fmt.Sprintf("127.0.0.1:%d", controllerPort),
@@ -405,7 +409,7 @@ func (m *ClashManager) buildMihomoNodeConfig(key string, node map[string]interfa
 		"ipv6":                true,
 		"unified-delay":       true,
 		"tcp-concurrent":      false,
-		"proxies":             []interface{}{node},
+		"proxies":             append([]interface{}{node}, upstreamProxies...),
 		"proxy-groups": []interface{}{
 			map[string]interface{}{
 				"name":    "proxy-out",

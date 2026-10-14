@@ -142,6 +142,8 @@ export function BrowserCoreList():Promise<Array<config.BrowserCore>>;
 
 export function BrowserCoreRedownload(arg1:string,arg2:string,arg3:string):Promise<void>;
 
+export function BrowserCoreReleaseList():Promise<string>;
+
 export function BrowserCoreSave(arg1:browser.CoreInput):Promise<void>;
 
 export function BrowserCoreScan():Promise<Array<config.BrowserCore>>;
@@ -342,6 +344,8 @@ export function GetProxyCheckSettings():Promise<config.ProxyCheckConfig>;
 
 export function GetRunningInstances():Promise<Array<browser.Profile>>;
 
+export function GetUpstreamProxySettings():Promise<backend.UpstreamProxySettings>;
+
 export function InstallAutomationRuntime():Promise<Record<string, any>>;
 
 export function ListGroups():Promise<Array<browser.GroupWithCount>>;
@@ -378,6 +382,8 @@ export function SaveLaunchServerSettings(arg1:number):Promise<Record<string, any
 
 export function SaveProxyCheckSettings(arg1:config.ProxyCheckConfig):Promise<void>;
 
+export function SaveUpstreamProxySettings(arg1:backend.UpstreamProxySettings):Promise<void>;
+
 export function SetLogLevel(arg1:string):Promise<void>;
 
 export function StartInstance(arg1:string):Promise<browser.Profile>;
@@ -391,6 +397,8 @@ export function StopInstance(arg1:string):Promise<browser.Profile>;
 export function TestProxyConnectivity(arg1:string,arg2:string):Promise<backend.ProxyTestResult>;
 
 export function TestProxyRealConnectivity(arg1:string):Promise<backend.ProxyTestResult>;
+
+export function TestUpstreamProxy(arg1:string):Promise<backend.UpstreamProxyTestResult>;
 
 export function TriggerGC():Promise<void>;
 

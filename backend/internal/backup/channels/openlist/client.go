@@ -2,6 +2,7 @@ package openlist
 
 import (
 	"ant-chrome/backend/internal/backup/channels"
+	"ant-chrome/backend/internal/upstream"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -86,11 +87,7 @@ func newHTTPClient() *http.Client {
 			return http.ErrUseLastResponse
 		},
 	}
-	transport, ok := http.DefaultTransport.(*http.Transport)
-	if !ok {
-		return client
-	}
-	transport = transport.Clone()
+	transport := upstream.NewTransport()
 	transport.ResponseHeaderTimeout = ControlTimeout
 	client.Transport = transport
 	return client

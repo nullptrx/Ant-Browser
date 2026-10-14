@@ -298,3 +298,40 @@ export async function saveLaunchServerSettings(port: number): Promise<LaunchServ
   }
   return normalizeLaunchServerSettings(await bindings.SaveLaunchServerSettings(port))
 }
+
+export interface UpstreamProxySettings {
+  enabled: boolean
+  url: string
+}
+
+export interface UpstreamProxyTestResult {
+  ok: boolean
+  latencyMs: number
+  error: string
+}
+
+export async function fetchUpstreamProxySettings(): Promise<UpstreamProxySettings> {
+  const bindings: any = await getBindings()
+  if (!bindings?.GetUpstreamProxySettings) {
+    return { enabled: false, url: '' }
+  }
+  const payload = await bindings.GetUpstreamProxySettings()
+  return { enabled: !!payload?.enabled, url: String(payload?.url || '') }
+}
+
+export async function saveUpstreamProxySettings(settings: UpstreamProxySettings): Promise<void> {
+  const bindings: any = await getBindings()
+  if (!bindings?.SaveUpstreamProxySettings) {
+    throw new Error('当前环境不支持前置代理设置')
+  }
+  await bindings.SaveUpstreamProxySettings(settings)
+}
+
+export async function testUpstreamProxy(url: string): Promise<UpstreamProxyTestResult> {
+  const bindings: any = await getBindings()
+  if (!bindings?.TestUpstreamProxy) {
+    return { ok: false, latencyMs: 0, error: '当前环境不支持测试' }
+  }
+  const payload = await bindings.TestUpstreamProxy(url)
+  return { ok: !!payload?.ok, latencyMs: Number(payload?.latencyMs || 0), error: String(payload?.error || '') }
+}

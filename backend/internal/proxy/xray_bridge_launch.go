@@ -3,6 +3,7 @@ package proxy
 import (
 	"ant-chrome/backend/internal/config"
 	"ant-chrome/backend/internal/logger"
+	"ant-chrome/backend/internal/upstream"
 	"context"
 	"errors"
 	"fmt"
@@ -84,6 +85,17 @@ func (m *XrayManager) ensureBridgeContext(ctx context.Context, proxyConfig strin
 			if err != nil {
 				log.Error("节点解析失败", logger.F("error", err))
 				return "", "", err
+			}
+			if standardProxy != "" && upstream.Current() != nil {
+				// Clash 形式的 http/socks5 节点：启用前置代理时同样桥接，避免浏览器绕过前置代理直连。
+				bridged, ok, bridgeErr := buildDirectProxyBridgeOutbound(standardProxy)
+				if bridgeErr != nil {
+					return "", "", bridgeErr
+				}
+				if ok {
+					outbound = bridged
+					standardProxy = ""
+				}
 			}
 			if standardProxy != "" {
 				return standardProxy, "", nil

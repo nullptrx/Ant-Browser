@@ -1,8 +1,8 @@
 package proxy
 
 import (
+	"ant-chrome/backend/internal/upstream"
 	"fmt"
-	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -32,7 +32,7 @@ func TestConnectivity(proxyId string, proxyConfig string, proxies []config.Brows
 	}
 
 	start := time.Now()
-	conn, err := net.DialTimeout("tcp", endpoint, 10*time.Second)
+	conn, err := upstream.Dialer{Timeout: 10 * time.Second}.Dial("tcp", endpoint)
 	latency := time.Since(start).Milliseconds()
 
 	if err != nil {

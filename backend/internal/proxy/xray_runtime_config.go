@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"ant-chrome/backend/internal/apppath"
+	"ant-chrome/backend/internal/upstream"
 	"context"
 	"crypto/sha256"
 	"crypto/tls"
@@ -43,6 +44,10 @@ func (m *XrayManager) buildRuntimeConfigWithRoute(key string, outbounds []interf
 	}
 	outbounds = sanitizeXrayOutbounds(outbounds)
 	outbounds = pinXrayInsecureTLSOutbounds(outbounds)
+	outbounds, upstreamTag, err := applyXrayUpstream(outbounds)
+	if err != nil {
+		return "", err
+	}
 	cfgPath := filepath.Join(baseDir, "xray-config.json")
 	cfg := map[string]interface{}{
 		"log": map[string]interface{}{
@@ -80,6 +85,7 @@ func (m *XrayManager) buildRuntimeConfigWithRoute(key string, outbounds []interf
 	} else {
 		cfg["dns"] = defaultXrayDNSConfig()
 	}
+	xrayUpstreamDNS(cfg, upstreamTag)
 	data, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return "", err
@@ -184,20 +190,21 @@ func fetchTLSPeerCertPins(host string, port string, serverName string) []string 
 }
 
 func fetchTLSPeerCertPin(host string, port string, serverName string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1200*time.Millisecond)
-	defer cancel()
-	dialer := &tls.Dialer{
-		NetDialer: &net.Dialer{Timeout: time.Second},
-		Config:    &tls.Config{ServerName: serverName, InsecureSkipVerify: true},
+	timeout := 1200 * time.Millisecond
+	if upstream.Current() != nil {
+		// 经前置代理多一跳，放宽超时。
+		timeout = 3 * time.Second
 	}
-	conn, err := dialer.DialContext(ctx, "tcp", host+":"+port)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	rawConn, err := upstream.Dialer{Timeout: timeout}.DialContext(ctx, "tcp", net.JoinHostPort(host, port))
 	if err != nil {
 		return "", err
 	}
-	defer conn.Close()
-	tlsConn, ok := conn.(*tls.Conn)
-	if !ok {
-		return "", nil
+	tlsConn := tls.Client(rawConn, &tls.Config{ServerName: serverName, InsecureSkipVerify: true})
+	defer tlsConn.Close()
+	if err := tlsConn.HandshakeContext(ctx); err != nil {
+		return "", err
 	}
 	state := tlsConn.ConnectionState()
 	if len(state.PeerCertificates) == 0 {

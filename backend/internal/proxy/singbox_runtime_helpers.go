@@ -122,6 +122,10 @@ func (m *SingBoxManager) buildConfig(key string, outbound map[string]interface{}
 		},
 	}
 
+	if err := applySingBoxUpstream(cfg, outbound); err != nil {
+		return "", err
+	}
+
 	data, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return "", err

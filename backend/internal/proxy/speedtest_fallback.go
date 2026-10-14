@@ -1,8 +1,8 @@
 package proxy
 
 import (
+	"ant-chrome/backend/internal/upstream"
 	"fmt"
-	"net"
 	"time"
 
 	"ant-chrome/backend/internal/logger"
@@ -17,7 +17,7 @@ func tcpPingFallback(proxyId, src string, timeout time.Duration, log *logger.Log
 	}
 
 	start := time.Now()
-	conn, err := net.DialTimeout("tcp", endpoint, timeout)
+	conn, err := upstream.Dialer{Timeout: timeout}.Dial("tcp", endpoint)
 	latency := time.Since(start).Milliseconds()
 
 	if err != nil {

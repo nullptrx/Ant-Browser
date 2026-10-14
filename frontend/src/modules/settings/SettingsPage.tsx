@@ -22,6 +22,7 @@ import type { AutomationNodeSource, AutomationRuntimeCheck, AutomationState, Aut
 import { AutomationSettingsCard } from './components/AutomationSettingsCard'
 import { useSettingsProgressEffects } from './hooks/useSettingsProgressEffects'
 import { SettingsAdvancedCard, SettingsBasicFeatureCards } from './components/SettingsGeneralCards'
+import { UpstreamProxyCard } from './components/UpstreamProxyCard'
 import { defaultSettings } from './types'
 import type { AppSettings } from './types'
 import type { AutomationRuntimeProgress } from './progress'
@@ -332,6 +333,7 @@ export function SettingsPage() {
         onInstall={() => { void handleAutomationInstall() }}
         onSelfCheck={() => { void handleAutomationSelfCheck() }}
       />
+      <UpstreamProxyCard />
       <SettingsAdvancedCard settings={settings} onChange={handleChange} />
     </div>
   )
